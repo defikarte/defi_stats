@@ -90,16 +90,16 @@ Live unter [stats.defikarte.ch/reports/defi_report_luks.html](https://stats.defi
 ### Datenquellen
 
 ```
-https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_lu.geojson
-https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_ur.geojson
-https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_nw.geojson
-https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_ow.geojson
+https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/defis_kt_lu.geojson
+https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/defis_kt_ur.geojson
+https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/defis_kt_nw.geojson
+https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/defis_kt_ow.geojson
 ```
 
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/OpenBracketsCH/defi_stats.git
+git clone https://github.com/defikarte/defi_stats.git
 cd defi_stats
 python -m http.server 8000
 # → http://localhost:8000/reports/defi_report_luks.html
@@ -156,7 +156,7 @@ Dem offiziellen defikarte.ch Styleguide folgend:
 ## 📧 Kontakt
 
 - **defikarte.ch**: [defikarte.ch](https://defikarte.ch)
-- **OpenBrackets CH**: [GitHub](https://github.com/OpenBracketsCH)
+- **OpenBrackets CH**: [GitHub](https://github.com/defikarte)
 - **LUKS**: [luks.ch](https://www.luks.ch)
 
 ## 📝 Verwandte Projekte

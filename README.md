@@ -42,7 +42,7 @@ Das Dashboard ist als **Single-Page Application** entwickelt:
 
 ### Datenquellen
 
-Die Daten werden von der [OpenStreetMap](https://www.openstreetmap.org/) Community erfasst und über das Repository [OpenBracketsCH/defi_data](https://github.com/OpenBracketsCH/defi_data) bereitgestellt.
+Die Daten werden von der [OpenStreetMap](https://www.openstreetmap.org/) Community erfasst und über das Repository [defikarte/defi_data](https://github.com/defikarte/defi_data) bereitgestellt.
 
 ## 📦 Installation
 
@@ -186,7 +186,7 @@ Beide Formate: **1080×1080 Pixel** (optimiert für Instagram, Facebook, LinkedI
 Die Datenquelle kann in Zeile 739 geändert werden:
 
 ```javascript
-const CDN = 'https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/';
+const CDN = 'https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/';
 ```
 
 ### Cache-Control

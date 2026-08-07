@@ -51,10 +51,10 @@ Besuchen Sie [stats.defikarte.ch/reports/defi_report_soh.html](https://stats.def
 
 ### Datenquelle
 
-Die Daten stammen aus OpenStreetMap und werden über das Repository [OpenBracketsCH/defi_data](https://github.com/OpenBracketsCH/defi_data) bereitgestellt:
+Die Daten stammen aus OpenStreetMap und werden über das Repository [defikarte/defi_data](https://github.com/defikarte/defi_data) bereitgestellt:
 
 ```
-https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_so.geojson
+https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/defis_kt_so.geojson
 ```
 
 ## 📦 Installation
@@ -63,7 +63,7 @@ https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_so.
 
 1. Repository klonen:
 ```bash
-git clone https://github.com/OpenBracketsCH/defi_stats.git
+git clone https://github.com/defikarte/defi_stats.git
 cd defi_stats
 ```
 
@@ -136,7 +136,7 @@ Dieser Report wurde in Zusammenarbeit mit den **Solothurner Spitälern (soH)** e
 ## 📧 Kontakt
 
 - **defikarte.ch**: [defikarte.ch](https://defikarte.ch)
-- **OpenBrackets CH**: [GitHub](https://github.com/OpenBracketsCH)
+- **OpenBrackets CH**: [GitHub](https://github.com/defikarte)
 - **Solothurner Spitäler**: [soH](https://www.solothurnerspitaeler.ch)
 
 ## 📝 Verwandte Projekte

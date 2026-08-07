@@ -28,7 +28,7 @@ jobs:
           
           for CANTON in $CANTONS; do
             echo "Fetching ${CANTON}..."
-            URL="https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_${CANTON}.geojson"
+            URL="https://cdn.jsdelivr.net/gh/defikarte/defi_data@main/data/json/defis_kt_${CANTON}.geojson"
             
             # Lade GeoJSON und zähle Features
             COUNT=$(curl -s "$URL" | jq '.features | length')

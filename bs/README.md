@@ -66,14 +66,14 @@ Live unter [stats.defikarte.ch/reports/defi_report_bs_bl.html](https://stats.def
 ### Datenquellen
 
 ```
-https://raw.githubusercontent.com/OpenBracketsCH/defi_data/main/data/json/defis_kt_bs.geojson
-https://raw.githubusercontent.com/OpenBracketsCH/defi_data/main/data/json/defis_kt_bl.geojson
+https://raw.githubusercontent.com/defikarte/defi_data/main/data/json/defis_kt_bs.geojson
+https://raw.githubusercontent.com/defikarte/defi_data/main/data/json/defis_kt_bl.geojson
 ```
 
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/OpenBracketsCH/defi_stats.git
+git clone https://github.com/defikarte/defi_stats.git
 cd defi_stats
 python -m http.server 8000
 # → http://localhost:8000/reports/defi_report_bs_bl.html

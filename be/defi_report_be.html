@@ -171,7 +171,7 @@
     </div>
     <div class="source-badge">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-      OpenBracketsCH/defi_data · defis_kt_be.geojson
+      defikarte/defi_data · defis_kt_be.geojson
     </div>
   </div>
 </div>
@@ -200,7 +200,7 @@
 </div>
 
 <footer>
-  Datenquelle: <a href="https://github.com/OpenBracketsCH/defi_data" target="_blank">OpenBracketsCH/defi_data</a> ·
+  Datenquelle: <a href="https://github.com/defikarte/defi_data" target="_blank">defikarte/defi_data</a> ·
   <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> ·
   <a href="https://defikarte.ch" target="_blank">defikarte.ch</a>
   <br><br><span id="last-updated"></span>
@@ -351,7 +351,7 @@ let allFeatures = [];
 
 async function loadData() {
   const msg = document.getElementById('load-msg');
-  const URL = 'https://raw.githubusercontent.com/OpenBracketsCH/defi_data/main/data/json/defis_kt_be.geojson';
+  const URL = 'https://raw.githubusercontent.com/defikarte/defi_data/main/data/json/defis_kt_be.geojson';
   try {
     msg.textContent = 'Verbinde mit GitHub…';
     const res = await fetch(URL);
@@ -446,7 +446,7 @@ function exportPDF() {
   doc.text('Defibrillatoren im Kanton Bern', 14, 30);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
   doc.setTextColor(180,220,160);
-  doc.text('Datenquelle: OpenBracketsCH/defi_data · OpenStreetMap · defis_kt_be.geojson', 14, 37);
+  doc.text('Datenquelle: defikarte/defi_data · OpenStreetMap · defis_kt_be.geojson', 14, 37);
   doc.setFillColor(151,197,104);
   doc.rect(0,43,W,1.5,'F');
   const boxes = [[total,'Defibrillatoren total'],[total24,'davon 24/7 erreichbar'],[pctAll+'%','Anteil 24/7'],[rows.length,'Gemeinden erfasst']];
@@ -471,7 +471,7 @@ function exportPDF() {
       doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(20,68,48);
       doc.text('defikarte.ch', 14, 291);
       doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
-      doc.text('Defibrillatoren Kanton Bern · OpenBracketsCH/defi_data · OpenStreetMap', W/2, 291, {align:'center'});
+      doc.text('Defibrillatoren Kanton Bern · defikarte/defi_data · OpenStreetMap', W/2, 291, {align:'center'});
       doc.text('Seite '+d.pageNumber, W-14, 291, {align:'right'});
     }
   });
