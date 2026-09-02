@@ -66,19 +66,19 @@ jobs:
           echo "  LI: $LI"
 
           # Schreibe europe-data.json
-          cat > europe-data.json << JSONEOF
-{
-  "updated": "${TODAY}",
-  "countries": {
-    "CH": ${CH},
-    "DE": ${DE},
-    "AT": ${AT},
-    "FR": ${FR},
-    "IT": ${IT},
-    "LI": ${LI}
-  }
-}
-JSONEOF
+          cat > europe-data.json <<EOF
+          {
+            "updated": "$TODAY",
+            "countries": {
+              "CH": $CH,
+              "DE": $DE,
+              "AT": $AT,
+              "FR": $FR,
+              "IT": $IT,
+              "LI": $LI
+            }
+          }
+          EOF
 
           echo "✅ europe-data.json geschrieben:"
           cat europe-data.json
