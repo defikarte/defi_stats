@@ -29,7 +29,7 @@ jobs:
             local ISO=$1
             local QUERY="[out:json][timeout:60];(area[\"ISO3166-1\"=\"${ISO}\"];area[\"ISO3166-1:alpha2\"=\"${ISO}\"];)->.a;node[\"emergency\"=\"defibrillator\"](area.a);out count;"
             for EP in "${ENDPOINTS[@]}"; do
-              echo "  Trying ${EP} for ${ISO}..."
+              echo "  Trying ${EP} for ${ISO}..." >&2
               RESULT=$(curl -s --max-time 75 -X POST "$EP" \
                 --data-urlencode "data=${QUERY}" 2>/dev/null)
               COUNT=$(echo "$RESULT" | jq -r '.elements[0].tags.total // empty' 2>/dev/null)
@@ -66,19 +66,8 @@ jobs:
           echo "  LI: $LI"
 
           # Schreibe europe-data.json
-          cat > europe-data.json <<EOF
-          {
-            "updated": "$TODAY",
-            "countries": {
-              "CH": $CH,
-              "DE": $DE,
-              "AT": $AT,
-              "FR": $FR,
-              "IT": $IT,
-              "LI": $LI
-            }
-          }
-          EOF
+          printf '{\n  "updated": "%s",\n  "countries": {\n    "CH": %s,\n    "DE": %s,\n    "AT": %s,\n    "FR": %s,\n    "IT": %s,\n    "LI": %s\n  }\n}\n' \
+            "$TODAY" "$CH" "$DE" "$AT" "$FR" "$IT" "$LI" > europe-data.json
 
           echo "✅ europe-data.json geschrieben:"
           cat europe-data.json

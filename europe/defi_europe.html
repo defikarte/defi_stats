@@ -286,6 +286,43 @@ async function buildMap(geojson) {
   if (dataLoaded) applyColors();
 }
 
+// ── RANGLISTE ─────────────────────────────────────────────────────────────────
+function buildRank() {
+  const sorted = [...COUNTRIES].filter(c => defiData[c.iso] > 0);
+  applySort(sorted);
+  document.getElementById('rlist').innerHTML = sorted.length ? sorted.map((c, i) => {
+    const tot = defiData[c.iso].toLocaleString('de-CH');
+    const per = (defiData[c.iso] / c.pop * 100).toFixed(1);
+    const rk = i + 1;
+    return `<div class="rrow${c.iso === 'CH' ? ' isch' : ''}">
+      <span class="rn${rk <= 3 ? ' top' : ''}">${rk}</span>
+      <span class="rf">${c.flag}</span>
+      <span class="rm">${c.name}<small>${c.pop.toLocaleString('de-CH')}k Einw.</small></span>
+      <span class="rv">${tot}<small>${per}/100k</small></span>
+    </div>`;
+  }).join('') : '<div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">Keine Daten</div>';
+}
+
+function applySort(arr) {
+  if (sortKey === 'total')   arr.sort((a,b) => (defiData[b.iso]||0) - (defiData[a.iso]||0));
+  else if (sortKey === 'per100k') arr.sort((a,b) => defiData[b.iso]/b.pop - defiData[a.iso]/a.pop);
+  else arr.sort((a,b) => a.name.localeCompare(b.name,'de'));
+}
+
+function sortBy(key, btn) {
+  sortKey = key;
+  document.querySelectorAll('.sbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dataLoaded) buildRank();
+}
+
+function setMetric(m, btn) {
+  metric = m;
+  document.querySelectorAll('.tgroup button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (geoLoaded && dataLoaded) applyColors();
+}
+
 // ── DATEN LADEN ──────────────────────────────────────────────────────────────
 
 async function loadData() {
