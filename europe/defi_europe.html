@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Defibrillatoren Europa — defikarte.ch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <style>
+    :root {
+      --green: #97C568;
+      --dark: #144430;
+      --bg: #F4F1EB;
+      --white: #FFFFFF;
+      --border: #DDD8CF;
+      --text: #1A2E1A;
+      --muted: #6B7B6B;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); }
+
+    header {
+      background: var(--dark); padding: 0 32px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .hlogo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .hdot {
+      width: 28px; height: 28px; background: var(--green);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .hdot svg { width: 16px; height: 16px; }
+    .htitle { font-size: 14px; font-weight: 600; color: #fff; }
+    .htag { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 20px; }
+
+    .hero { background: var(--dark); padding: 48px 32px 56px; position: relative; }
+    .hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: var(--bg); border-radius: 40px 40px 0 0; }
+    .hero-inner { max-width: 1100px; margin: 0 auto; }
+    .hero h1 { font-size: clamp(28px,4vw,44px); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
+    .hero h1 span { color: var(--green); }
+    .hero-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 28px; }
+    .hero-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+    .hstat { display: flex; flex-direction: column; }
+    .hval { font-size: 26px; font-weight: 700; color: var(--green); line-height: 1; }
+    .hlbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 32px 64px; }
+    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(20,68,48,0.06); }
+    .card-head { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-head h2 { font-size: 13px; font-weight: 600; color: var(--dark); }
+
+    .tgroup { display: flex; gap: 3px; background: var(--bg); padding: 3px; border-radius: 8px; }
+    .tgroup button {
+      border: none; background: transparent; font-family: 'Poppins', sans-serif;
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    }
+    .tgroup button.active { background: var(--dark); color: #fff; }
+
+    #map-wrap { padding: 16px; min-height: 380px; position: relative; }
+    #map-svg { width: 100%; height: auto; display: block; }
+    .cpath { stroke: #fff; stroke-width: 0.5; cursor: pointer; transition: opacity 0.15s; }
+    .cpath:hover { opacity: 0.75; stroke: var(--dark); stroke-width: 1.2; }
+    .cpath.nodata { fill: #DDD8CF !important; cursor: default; }
+    .cpath.nodata:hover { opacity: 1; stroke: #fff; stroke-width: 0.5; }
+
+    .legend { padding: 10px 24px 16px; display: flex; align-items: center; gap: 10px; }
+    .llbl { font-size: 10px; color: var(--muted); }
+    .lbar { flex: 1; height: 7px; border-radius: 4px; background: linear-gradient(to right,#d4eab8,#97C568,#2d6a20,#144430); }
+
+    /* Loading */
+    #loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 20px; }
+    .pbg { width: 200px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .pfill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s; width: 0; }
+    .ptxt { font-size: 12px; color: var(--muted); }
+    .pflags { font-size: 16px; min-height: 24px; letter-spacing: 2px; }
+
+    /* Rank */
+    .rank-card { position: sticky; top: 24px; }
+    .rank-body { padding: 12px 0 0; }
+    .srow { display: flex; gap: 4px; padding: 0 16px 10px; }
+    .sbtn {
+      border: none; background: var(--bg); font-family: 'Poppins', sans-serif;
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      padding: 5px 8px; border-radius: 6px; cursor: pointer; flex: 1; transition: all 0.15s;
+    }
+    .sbtn.active { background: var(--dark); color: #fff; }
+    #rlist { max-height: 490px; overflow-y: auto; padding-bottom: 12px; }
+    #rlist::-webkit-scrollbar { width: 3px; }
+    #rlist::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .rrow { display: grid; grid-template-columns: 24px 22px 1fr auto; align-items: center; gap: 8px; padding: 7px 16px; transition: background 0.1s; }
+    .rrow:hover { background: var(--bg); }
+    .rrow.isch { background: rgba(151,197,104,0.10); }
+    .rn { font-size: 11px; font-weight: 700; color: var(--muted); text-align: right; }
+    .rn.top { color: var(--green); }
+    .rf { font-size: 17px; }
+    .rm { font-size: 12px; font-weight: 500; line-height: 1.3; }
+    .rm small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+    .rv { text-align: right; font-size: 12px; font-weight: 700; }
+    .rv small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+
+    #tt {
+      position: fixed; background: var(--dark); color: #fff;
+      padding: 8px 13px; border-radius: 10px; font-size: 12px;
+      pointer-events: none; opacity: 0; transition: opacity 0.1s;
+      z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    #tt b { display: block; font-size: 13px; margin-bottom: 2px; }
+
+    .foot { margin-top: 20px; font-size: 11px; color: var(--muted); text-align: center; }
+    .foot a { color: var(--dark); }
+
+    @media(max-width:800px) {
+      .layout { grid-template-columns: 1fr; }
+      .rank-card { position: static; }
+      main { padding: 24px 16px 48px; }
+      header { padding: 0 16px; }
+      .hero { padding: 32px 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="hlogo" href="https://stats.defikarte.ch">
+    <div class="hdot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#144430" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <span class="htitle">defikarte.ch</span>
+  </a>
+  <span class="htag">Nachbarländer · Vergleich</span>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Defibrillatoren im<br><span>Vergleich</span></h1>
+    <p class="hero-sub">Schweiz und Nachbarländer · OpenStreetMap · Live via Overpass API</p>
+    <div class="hero-stats">
+      <div class="hstat"><span class="hval" id="h-total">—</span><span class="hlbl">Defibrillatoren total</span></div>
+      <div class="hstat"><span class="hval" id="h-count">—</span><span class="hlbl">Länder erfasst</span></div>
+      <div class="hstat"><span class="hval" id="h-leader">—</span><span class="hlbl">Führend pro 100k</span></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="layout">
+    <!-- KARTE -->
+    <div class="card">
+      <div class="card-head">
+        <h2>Verteilung nach Land</h2>
+        <div class="tgroup">
+          <button class="active" onclick="setMetric('total',this)">Absolut</button>
+          <button onclick="setMetric('per100k',this)">pro 100k</button>
+        </div>
+      </div>
+      <div id="map-wrap">
+        <div id="loading-wrap">
+          <div class="pbg"><div class="pfill" id="pfill"></div></div>
+          <div class="ptxt" id="ptxt">Verbinde mit Overpass API…</div>
+          <div class="pflags" id="pflags"></div>
+        </div>
+      </div>
+      <div class="legend" id="legend" style="display:none">
+        <span class="llbl">weniger</span>
+        <div class="lbar"></div>
+        <span class="llbl">mehr</span>
+      </div>
+    </div>
+
+    <!-- RANGLISTE -->
+    <div class="card rank-card">
+      <div class="card-head"><h2>Rangliste</h2></div>
+      <div class="rank-body">
+        <div class="srow">
+          <button class="sbtn active" onclick="sortBy('total',this)">Absolut</button>
+          <button class="sbtn" onclick="sortBy('per100k',this)">pro 100k</button>
+          <button class="sbtn" onclick="sortBy('name',this)">A–Z</button>
+        </div>
+        <div id="rlist"><div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">Wird geladen…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">
+    Quelle: <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a> via
+    <a href="https://overpass-api.de" target="_blank">Overpass API</a> ·
+    Bevölkerung: UN 2024 · Kartengrundlage: <a href="https://github.com/leakyMirror/map-of-europe" target="_blank">leakyMirror</a> ·
+    Abgerufen: <span id="fts">—</span>
+  </p>
+</main>
+
+<div id="tt"></div>
+
+<script>
+const COUNTRIES = [
+  { iso: 'CH', name: 'Schweiz',       flag: '🇨🇭', pop: 8849  },
+  { iso: 'DE', name: 'Deutschland',    flag: '🇩🇪', pop: 84607 },
+  { iso: 'AT', name: 'Österreich',     flag: '🇦🇹', pop: 9120  },
+  { iso: 'FR', name: 'Frankreich',     flag: '🇫🇷', pop: 68373 },
+  { iso: 'IT', name: 'Italien',        flag: '🇮🇹', pop: 59240 },
+  { iso: 'LI', name: 'Liechtenstein',  flag: '🇱🇮', pop: 39    },
+];
+const ISO_SET = new Set(COUNTRIES.map(c => c.iso));
+
+let defiData = {};   // iso -> count
+let metric = 'total';
+let sortKey = 'total';
+let geoLoaded = false;
+let dataLoaded = false;
+
+// ── FARBEN ────────────────────────────────────────────────────────────────────
+function getVal(iso) {
+  const c = COUNTRIES.find(x => x.iso === iso);
+  if (!c || !defiData[iso]) return 0;
+  return metric === 'per100k' ? defiData[iso] / c.pop : defiData[iso];
+}
+
+function colorFor(iso) {
+  if (!defiData[iso]) return '#DDD8CF';
+  const vals = COUNTRIES.filter(c => defiData[c.iso] > 0).map(c => getVal(c.iso));
+  const max = d3.max(vals) || 1;
+  const t = Math.min(getVal(iso) / max, 1);
+  return d3.interpolate('#d4eab8', '#144430')(t);
+}
+
+function applyColors() {
+  d3.selectAll('.cpath').each(function() {
+    const iso = d3.select(this).attr('data-iso');
+    const hasData = defiData[iso] > 0;
+    d3.select(this)
+      .classed('nodata', !hasData)
+      .style('fill', hasData ? colorFor(iso) : null);
+  });
+}
+
+// ── KARTE ─────────────────────────────────────────────────────────────────────
+async function buildMap(geojson) {
+  const wrap = document.getElementById('map-wrap');
+  const lw = document.getElementById('loading-wrap');
+
+  const W = wrap.clientWidth - 32;
+  const H = Math.round(W * 0.72);
+
+  const svg = d3.select(wrap)
+    .append('svg')
+    .attr('id', 'map-svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', W)
+    .attr('height', H);
+
+  const OUR_ISOS = ISO_SET;
+  const features = geojson.features.filter(f => OUR_ISOS.has(f.properties.ISO2));
+
+  const proj = d3.geoMercator().fitExtent([[10,10],[W-10,H-10]], {
+    type: 'FeatureCollection', features
+  });
+  const path = d3.geoPath().projection(proj);
+
+  const tt = document.getElementById('tt');
+
+  svg.selectAll('path')
+    .data(features)
+    .join('path')
+    .attr('class', 'cpath')
+    .attr('data-iso', d => d.properties.ISO2)
+    .attr('d', path)
+    .on('mousemove', function(event, d) {
+      const iso = d.properties.ISO2;
+      const c = COUNTRIES.find(x => x.iso === iso);
+      if (!c || !defiData[iso]) return;
+      const per = (defiData[iso] / c.pop * 100).toFixed(1);
+      tt.innerHTML = `<b>${c.flag} ${c.name}</b>${defiData[iso].toLocaleString('de-CH')} Defis &nbsp;·&nbsp; ${per} pro 100k`;
+      tt.style.opacity = 1;
+      tt.style.left = (event.clientX + 14) + 'px';
+      tt.style.top = (event.clientY - 48) + 'px';
+    })
+    .on('mouseleave', () => { tt.style.opacity = 0; });
+
+  if (lw) lw.remove();
+  document.getElementById('legend').style.display = 'flex';
+
+  geoLoaded = true;
+  if (dataLoaded) applyColors();
+}
+
+// ── DATEN LADEN ──────────────────────────────────────────────────────────────
+
+async function loadData() {
+  const pfill = document.getElementById('pfill');
+  const ptxt  = document.getElementById('ptxt');
+  const pflags = document.getElementById('pflags');
+
+  ptxt.textContent = 'Lade Daten…';
+  pflags.textContent = '🌍';
+  pfill.style.width = '20%';
+
+  // 1. Versuche europe-data.json zu laden (lokal, dann CDN)
+  let loaded = false;
+  const sources = [
+    'europe-data.json?t=' + Date.now(),
+    'https://raw.githubusercontent.com/OpenBracketsCH/defi_stats/main/europe-data.json?t=' + Date.now(),
+  ];
+
+  for (const src of sources) {
+    try {
+      const r = await fetch(src);
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (j.countries && Object.values(j.countries).some(v => v > 0)) {
+        COUNTRIES.forEach(c => { defiData[c.iso] = j.countries[c.iso] || 0; });
+        document.getElementById('fts').textContent = j.updated || '—';
+        loaded = true;
+        pfill.style.width = '100%';
+        ptxt.textContent = 'Daten geladen';
+        pflags.textContent = COUNTRIES.map(c => c.flag).join(' ');
+        break;
+      }
+    } catch(e) { continue; }
+  }
+
+  if (!loaded) {
+    ptxt.textContent = 'Keine Daten verfügbar — bitte GitHub Actions manuell auslösen';
+    pfill.style.width = '100%';
+  }
+
+  // Hero-Stats
+  const total = Object.values(defiData).reduce((a,b) => a+b, 0);
+  document.getElementById('h-total').textContent = total > 0 ? total.toLocaleString('de-CH') : '—';
+  document.getElementById('h-count').textContent = COUNTRIES.filter(c => defiData[c.iso] > 0).length || '—';
+  const leader = COUNTRIES.filter(c => defiData[c.iso] > 0)
+    .reduce((best, c) => (!best || defiData[c.iso]/c.pop > defiData[best.iso]/best.pop) ? c : best, null);
+  if (leader) document.getElementById('h-leader').textContent = leader.flag + ' ' + leader.name;
+
+  dataLoaded = true;
+  if (geoLoaded) applyColors();
+  buildRank();
+}
+
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    // GeoJSON und Overpass parallel starten
+    const [geojson] = await Promise.all([
+      fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson').then(r => r.json()),
+      loadData()
+    ]);
+    await buildMap(geojson);
+  } catch(e) {
+    console.error('Init error:', e);
+    document.getElementById('ptxt').textContent = 'Fehler: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
