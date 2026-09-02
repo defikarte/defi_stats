@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '20'
       
-      - name: Fetch Defibrillator Data (Schweizer Kantone)
+      - name: Fetch Defibrillator Data
         run: |
           # Liste aller Schweizer Kantone
           CANTONS="ag ai ar be bl bs fr ge gl gr ju lu ne nw ow sg sh so sz tg ti ur vd vs zg zh"
@@ -43,61 +43,8 @@ jobs:
           
           echo "TOTAL_DEFIS=$TOTAL" >> $GITHUB_ENV
           echo "Gesamtzahl: $TOTAL Defibrillatoren"
-
-      - name: Fetch Defibrillator Data (Nachbarländer via Overpass)
-        run: |
-          TODAY=$(date +%Y-%m-%d)
-          
-          # Overpass-Endpunkte (Fallback)
-          ENDPOINTS=(
-            "https://overpass.private.coffee/api/interpreter"
-            "https://overpass-api.de/api/interpreter"
-            "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
-          )
-
-          fetch_country() {
-            local ISO=$1
-            local QUERY="[out:json][timeout:60];(area[\"ISO3166-1\"=\"${ISO}\"];area[\"ISO3166-1:alpha2\"=\"${ISO}\"];)->.a;node[\"emergency\"=\"defibrillator\"](area.a);out count;"
-            for EP in "${ENDPOINTS[@]}"; do
-              RESULT=$(curl -s --max-time 90 -X POST "$EP" --data-urlencode "data=${QUERY}" 2>/dev/null)
-              COUNT=$(echo "$RESULT" | jq -r '.elements[0].tags.total // "0"' 2>/dev/null)
-              if [ ! -z "$COUNT" ] && [ "$COUNT" -gt 0 ]; then
-                echo "$COUNT"
-                return
-              fi
-            done
-            echo "0"
-          }
-
-          echo "Fetching Nachbarländer..."
-
-          CH=$(fetch_country "CH")
-          DE=$(fetch_country "DE")
-          AT=$(fetch_country "AT")
-          FR=$(fetch_country "FR")
-          IT=$(fetch_country "IT")
-          LI=$(fetch_country "LI")
-
-          echo "  CH: $CH | DE: $DE | AT: $AT | FR: $FR | IT: $IT | LI: $LI"
-
-          # Schreibe europe-data.json
-          cat > europe-data.json << EOF
-          {
-            "updated": "${TODAY}",
-            "countries": {
-              "CH": $CH,
-              "DE": $DE,
-              "AT": $AT,
-              "FR": $FR,
-              "IT": $IT,
-              "LI": $LI
-            }
-          }
-          EOF
-
-          echo "✅ europe-data.json geschrieben"
       
-      - name: Update historical-data.json
+      - name: Update JSON File
         run: |
           # Heutiges Datum (YYYY-MM-DD)
           TODAY=$(date +%Y-%m-%d)
@@ -118,7 +65,7 @@ jobs:
             echo "UPDATE_MADE=true" >> $GITHUB_ENV
           else
             echo "ℹ️ Eintrag für $TODAY existiert bereits"
-            echo "UPDATE_MADE=true" >> $GITHUB_ENV  # europe-data.json immer deployen
+            echo "UPDATE_MADE=false" >> $GITHUB_ENV
           fi
       
       - name: Commit and Push
@@ -127,13 +74,13 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "GitHub Actions"
           
-          git add historical-data.json europe-data.json
+          git add historical-data.json
           git commit -m "📊 Automatisches Update: $(date +%Y-%m-%d) - $TOTAL_DEFIS Defibrillatoren"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload JSON-Dateien via FTP
+      - name: Upload historical-data.json via FTP
         if: env.UPDATE_MADE == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -145,5 +92,3 @@ jobs:
           exclude: |
             **/*
             !historical-data.json
-            !europe-data.json
-

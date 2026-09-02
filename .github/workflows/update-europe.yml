@@ -1,0 +1,106 @@
+name: Update Europe Defibrillator Data
+
+on:
+  schedule:
+    # Läuft am 1. jeden Monats um 10:00 UTC (nach dem Schweiz-Workflow)
+    - cron: '0 10 1 * *'
+  workflow_dispatch: # Erlaubt manuelles Auslösen
+
+jobs:
+  update-europe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Nachbarländer via Overpass
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+
+          ENDPOINTS=(
+            "https://overpass.private.coffee/api/interpreter"
+            "https://overpass-api.de/api/interpreter"
+            "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+          )
+
+          fetch_country() {
+            local ISO=$1
+            local QUERY="[out:json][timeout:60];(area[\"ISO3166-1\"=\"${ISO}\"];area[\"ISO3166-1:alpha2\"=\"${ISO}\"];)->.a;node[\"emergency\"=\"defibrillator\"](area.a);out count;"
+            for EP in "${ENDPOINTS[@]}"; do
+              echo "  Trying ${EP} for ${ISO}..."
+              RESULT=$(curl -s --max-time 75 -X POST "$EP" \
+                --data-urlencode "data=${QUERY}" 2>/dev/null)
+              COUNT=$(echo "$RESULT" | jq -r '.elements[0].tags.total // empty' 2>/dev/null)
+              if [ ! -z "$COUNT" ] && [ "$COUNT" -ge 0 ]; then
+                echo "$COUNT"
+                return
+              fi
+            done
+            echo "0"
+          }
+
+          echo "Fetching CH..."
+          CH=$(fetch_country "CH")
+          echo "  CH: $CH"
+
+          echo "Fetching DE..."
+          DE=$(fetch_country "DE")
+          echo "  DE: $DE"
+
+          echo "Fetching AT..."
+          AT=$(fetch_country "AT")
+          echo "  AT: $AT"
+
+          echo "Fetching FR..."
+          FR=$(fetch_country "FR")
+          echo "  FR: $FR"
+
+          echo "Fetching IT..."
+          IT=$(fetch_country "IT")
+          echo "  IT: $IT"
+
+          echo "Fetching LI..."
+          LI=$(fetch_country "LI")
+          echo "  LI: $LI"
+
+          # Schreibe europe-data.json
+          cat > europe-data.json << JSONEOF
+{
+  "updated": "${TODAY}",
+  "countries": {
+    "CH": ${CH},
+    "DE": ${DE},
+    "AT": ${AT},
+    "FR": ${FR},
+    "IT": ${IT},
+    "LI": ${LI}
+  }
+}
+JSONEOF
+
+          echo "✅ europe-data.json geschrieben:"
+          cat europe-data.json
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git add europe-data.json
+          git diff --staged --quiet || git commit -m "🌍 Europa-Update: $(date +%Y-%m-%d)"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload europe-data.json via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_PATH }}
+          exclude: |
+            **/*
+            !europe-data.json
