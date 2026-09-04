@@ -25,6 +25,7 @@ Das Defikarte.ch Dashboard bietet eine umfassende Übersicht über die Qualität
 - **📱 Social Media Export**: Professionelle Grafiken für Social Media (1080x1080px)
   - Schweizweite Übersicht
   - Kantone-spezifische Grafiken mit Wappen
+- **🌍 Ländervergleich**: Schweiz und Nachbarländer im europäischen Vergleich
 
 ## 🚀 Demo
 
@@ -73,11 +74,13 @@ Das Dashboard ist eine statische HTML-Datei und kann auf jedem Webserver gehoste
 - Vercel
 - Ihr eigener Webserver
 
-Einfach die `defikarte-dashboard.html` und `historical-data.json` hochladen und fertig!
+Einfach die `defikarte-dashboard.html`, `historical-data.json` und `europe-data.json` hochladen und fertig!
 
 ### 🤖 Automatische Statistik-Updates (GitHub Actions)
 
-Das Repository enthält einen GitHub Actions Workflow für automatische monatliche Updates:
+Das Repository enthält zwei GitHub Actions Workflows für automatische monatliche Updates:
+
+#### Workflow 1: Schweizer Kantone (`update-statistics.yml`)
 
 1. **Setup:**
    ```
@@ -102,6 +105,29 @@ Das Repository enthält einen GitHub Actions Workflow für automatische monatlic
    - Repository muss `historical-data.json` enthalten
    - GitHub Actions müssen aktiviert sein
    - Standard `GITHUB_TOKEN` hat Schreib-Rechte
+
+#### Workflow 2: Nachbarländer (`update-europe.yml`)
+
+1. **Setup:**
+   ```
+   .github/
+     └── workflows/
+         └── update-europe.yml
+   ```
+
+2. **Funktionsweise:**
+   - Läuft automatisch am **1. jeden Monats um 10:00 UTC** (nach dem Schweiz-Workflow)
+   - Fragt Overpass API für CH, DE, AT, FR, IT und LI ab
+   - Schreibt Ergebnisse in `europe-data.json`
+   - Committed und uploaded via FTP
+
+3. **Manuelles Auslösen (Erstbefüllung):**
+   - GitHub Repository → Actions Tab
+   - Workflow "Update Europe Defibrillator Data" auswählen
+   - "Run workflow" Button klicken
+   - ⚠️ Muss **einmalig manuell** ausgelöst werden um `europe-data.json` initial zu befüllen
+
+4. **Secrets benötigt:** `FTP_HOST`, `FTP_USER`, `FTP_PASS`, `FTP_PATH`
 
 ## 📊 Analysierte Attribute
 
@@ -160,6 +186,34 @@ Falls GitHub Actions nicht verwendet werden, kann die `historical-data.json` man
 2. Neuen Eintrag am Ende der JSON-Datei hinzufügen
 3. Datum im Format `YYYY-MM-DD` verwenden
 4. Datei speichern und deployen
+
+## 🌍 Ländervergleich (`defi_europe.html`)
+
+Die Europe-Seite zeigt die Schweiz im Vergleich mit ihren Nachbarländern (DE, AT, FR, IT, LI).
+
+### Features:
+- **Choropleth-Karte** (D3.js, Mercator-Projektion) mit Ländereinfärbung
+- **Toggle**: Absolut / pro 100k Einwohner
+- **Rangliste**: Sortierbar nach Total, pro 100k oder A–Z
+- **Keine Live-Abfragen**: Daten kommen aus gecachter `europe-data.json`
+
+### Datenformat (`europe-data.json`):
+```json
+{
+  "updated": "2026-09-02",
+  "countries": {
+    "CH": 17154,
+    "DE": 20028,
+    "AT": 1840,
+    "FR": 28020,
+    "IT": 7751,
+    "LI": 221
+  }
+}
+```
+
+### Erstbefüllung:
+Die Datei wird durch den Workflow `update-europe.yml` befüllt. Einmalig manuell auslösen via GitHub Actions → "Update Europe Defibrillator Data" → "Run workflow".
 
 ## 🎨 Export-Funktion
 
@@ -262,6 +316,26 @@ Das Dashboard erwartet GeoJSON-Dateien im folgenden Format:
 }
 ```
 
+## 🗂️ Alle Dateien im Überblick
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `defikarte-dashboard.html` | Hauptdashboard (alle Kantone, Ranking, Wachstum) |
+| `defi_report_be.html` | Kanton Bern |
+| `defi_report_zh.html` | Kanton Zürich |
+| `defi_report_bs_bl.html` | Basel-Stadt & Basel-Landschaft |
+| `defi_report_luks.html` | LUKS-Region (LU/UR/NW/OW) |
+| `defi_report_soh.html` | Kanton Solothurn |
+| `defi_report_gl.html` | Kanton Glarus |
+| `defi_report_ai.html` | Kanton Appenzell Innerrhoden |
+| `defi_report_ju.html` | Kanton Jura |
+| `defi_report_gr.html` | Kanton Graubünden |
+| `defi_report_ti.html` | Kanton Tessin |
+| `defi_report_vs.html` | Kanton Wallis |
+| `defi_europe.html` | Ländervergleich CH / Nachbarländer |
+| `historical-data.json` | Monatliche CH-Gesamtzahlen (seit 2020) |
+| `europe-data.json` | Defi-Zahlen Nachbarländer (monatlich) |
+
 ## 🤝 Mitwirken
 
 Beiträge sind willkommen! So können Sie helfen:
@@ -303,7 +377,7 @@ Das Dashboard verwendet das offizielle defikarte.ch Farbschema:
 
 - **Primärfarbe (Hellgrün)**: `#97C568` - für Buttons, Highlights, positive Werte
 - **Sekundärfarbe (Dunkelgrün)**: `#144430` - für Header, Text, dunkle Elemente
-- **Schriftart**: Poppins (laut Styleguide) / Open Sans (im Dashboard)
+- **Schriftart**: Poppins
 
 Alle Farben sind in CSS-Variablen definiert und können zentral angepasst werden.
 

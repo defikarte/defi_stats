@@ -32,16 +32,18 @@
     .htitle { font-size: 14px; font-weight: 600; color: #fff; }
     .htag { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 20px; }
 
-    .hero { background: var(--dark); padding: 48px 32px 56px; position: relative; }
-    .hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: var(--bg); border-radius: 40px 40px 0 0; }
-    .hero-inner { max-width: 1100px; margin: 0 auto; }
-    .hero h1 { font-size: clamp(28px,4vw,44px); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
+    .hero { background: linear-gradient(135deg, var(--dark) 0%, #1e6644 100%); color: #fff; padding: 3rem 2rem 2.5rem; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 280px; height: 280px; border-radius: 50%; background: rgba(151,197,104,.12); }
+    .hero::after { content: ''; position: absolute; bottom: -40px; left: 30%; width: 180px; height: 180px; border-radius: 50%; background: rgba(151,197,104,.07); }
+    .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero h1 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; line-height: 1.2; margin-bottom: .5rem; }
     .hero h1 span { color: var(--green); }
-    .hero-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 28px; }
-    .hero-stats { display: flex; gap: 32px; flex-wrap: wrap; }
-    .hstat { display: flex; flex-direction: column; }
-    .hval { font-size: 26px; font-weight: 700; color: var(--green); line-height: 1; }
-    .hlbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .hero-sub { font-size: .875rem; font-weight: 300; color: rgba(255,255,255,.7); margin-bottom: 2rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(3, auto); gap: 1rem; width: fit-content; }
+    .hstat { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.15); border-radius: 12px; padding: 1rem 1.25rem; backdrop-filter: blur(4px); transition: background .2s; }
+    .hstat:hover { background: rgba(255,255,255,.14); }
+    .hval { font-size: 2rem; font-weight: 700; color: var(--green); line-height: 1; display: block; }
+    .hlbl { font-size: .75rem; font-weight: 400; color: rgba(255,255,255,.65); margin-top: .3rem; display: block; }
 
     main { max-width: 1100px; margin: 0 auto; padding: 32px 32px 64px; }
     .layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
@@ -117,7 +119,7 @@
       .rank-card { position: static; }
       main { padding: 24px 16px 48px; }
       header { padding: 0 16px; }
-      .hero { padding: 32px 16px 48px; }
+      .hero { padding: 2rem 1.25rem; } .hero-stats { grid-template-columns: repeat(2, 1fr); width: 100%; }
     }
   </style>
 </head>
