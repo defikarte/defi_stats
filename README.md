@@ -326,12 +326,11 @@ Das Dashboard erwartet GeoJSON-Dateien im folgenden Format:
 | `defi_report_bs_bl.html` | Basel-Stadt & Basel-Landschaft |
 | `defi_report_luks.html` | LUKS-Region (LU/UR/NW/OW) |
 | `defi_report_soh.html` | Kanton Solothurn |
-| `defi_report_gl.html` | Kanton Glarus |
-| `defi_report_ai.html` | Kanton Appenzell Innerrhoden |
 | `defi_report_ju.html` | Kanton Jura |
-| `defi_report_gr.html` | Kanton Graubünden |
+| `defi_report_ge.html` | Kanton Genf |
+| `defi_report_ne.html` | Kanton Neuenburg |
+| `defi_report_vd.html` | Kanton Waadt |
 | `defi_report_ti.html` | Kanton Tessin |
-| `defi_report_vs.html` | Kanton Wallis |
 | `defi_europe.html` | Ländervergleich CH / Nachbarländer |
 | `historical-data.json` | Monatliche CH-Gesamtzahlen (seit 2020) |
 | `europe-data.json` | Defi-Zahlen Nachbarländer (monatlich) |
