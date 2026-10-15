@@ -404,8 +404,8 @@ async function loadData() {
   // 1. Versuche europe-data.json zu laden (lokal, dann CDN)
   let loaded = false;
   const sources = [
-    'europe-data.json?t=' + Date.now(),
-    'https://raw.githubusercontent.com/OpenBracketsCH/defi_stats/main/europe-data.json?t=' + Date.now(),
+    '../europe-data.json?t=' + Date.now(),
+    'https://raw.githubusercontent.com/defikarte/defi_stats/main/europe-data.json?t=' + Date.now(),
   ];
 
   for (const src of sources) {
