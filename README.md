@@ -1,6 +1,6 @@
-# Defikarte.ch Dashboard
+# defikarte.ch Statistik
 
-Ein interaktives Dashboard zur Visualisierung und Analyse der Defibrillator-Datenqualität in der Schweiz.
+Statistik-Seite und Kantons-Reports zu den Defibrillatoren auf [defikarte.ch](https://defikarte.ch) – live unter [stats.defikarte.ch](https://stats.defikarte.ch).
 
 ## 🎯 Über das Projekt
 
@@ -17,23 +17,17 @@ Die Statistik-Seite (stats.defikarte.ch) zeigt, wie viele Defibrillatoren in der
 
 **Einsatztauglich erfasst** heisst: Standortbeschreibung, Zugänglichkeit, Öffnungszeiten und Innen/Aussen sind angegeben – die Angaben, die man im Notfall braucht.
 
-## 🚀 Demo
-
-Besuchen Sie [defikarte.ch/dashboard](https://defikarte.ch/dashboard) für eine Live-Demo.
-
 ## 🛠️ Technologie
 
-Das Dashboard ist als **Single-Page Application** entwickelt:
-
-- **Vanilla JavaScript** - Keine Framework-Abhängigkeiten
-- **HTML5 Canvas API** - Für Grafik-Generierung und Wachstums-Chart
-- **CSS3** - Responsive Design mit Flexbox/Grid
-- **jsDelivr CDN** - Schnelle Datenlieferung mit Cache-Busting
-- **GitHub Actions** - Automatische monatliche Statistik-Updates
+- **Vanilla JavaScript** (ES-Module), kein Framework, kein Build-Schritt
+- **Canvas** für Wachstumsgrafik und Social-Media-Grafiken
+- **jsPDF + AutoTable** für den PDF-Export der Reports
+- **GitHub Actions** für monatliche Updates und den Deploy
 
 ### Datenquellen
 
-Die Daten werden von der [OpenStreetMap](https://www.openstreetmap.org/) Community erfasst und über das Repository [defikarte/defi_data](https://github.com/defikarte/defi_data) bereitgestellt.
+- Defibrillatoren: [OpenStreetMap](https://www.openstreetmap.org/), bereitgestellt über [defikarte/defi_data](https://github.com/defikarte/defi_data) (live geladen von `raw.githubusercontent.com`)
+- Gemeindegrenzen und Einwohnerzahlen: [swisstopo swissBOUNDARIES3D](https://www.swisstopo.admin.ch/de/landschaftsmodell-swissboundaries3d)
 
 ## 📦 Installation
 
@@ -50,9 +44,10 @@ cd defi_stats
 python -m http.server 8000
 ```
 
-3. Dashboard im Browser öffnen:
+3. Im Browser öffnen:
 ```
-http://localhost:8000/
+http://localhost:8000/                → Statistik-Seite
+http://localhost:8000/reports/?r=be   → Report Kanton Bern
 ```
 
 ### Deployment
@@ -63,60 +58,20 @@ Deployt wird automatisch ab GitHub nach **stats.defikarte.ch** (Workflow `deploy
 - nach jedem erfolgreichen Lauf der Update-Workflows (Statistik, Europa, Gemeindegrenzen)
 - manuell: Actions → "Deploy stats.defikarte.ch" → "Run workflow"
 
-Dabei wird für jeden Eintrag in `reports/reports.json` die Seite `/<id>/` erzeugt (z.B. `stats.defikarte.ch/zh/`). Hochgeladen werden nur geänderte Dateien. Nicht hochgeladen werden `.github/`, `archive/`, `scripts/`, `README.md`, `LICENSE`, `screenshot.png` und `defikarte-praesentation.html`.
+Dabei wird für jeden Eintrag in `reports/reports.json` die Seite `/<id>/` erzeugt (z.B. `stats.defikarte.ch/zh/`), und alle lokalen JS/CSS-Dateien bekommen die Commit-Nummer angehängt (`report.js?v=a5c5d3c`), damit Browser nach jedem Deploy die neue Version laden. Hochgeladen werden nur geänderte Dateien. Nicht hochgeladen werden `.github/`, `archive/`, `scripts/`, `README.md`, `LICENSE`, `screenshot.png` und `defikarte-praesentation.html`.
 
 **Secrets:** `FTP_HOST`, `FTP_USER`, `FTP_PASS`, `FTP_PATH` (Webroot von stats.defikarte.ch)
 
-### 🤖 Automatische Statistik-Updates (GitHub Actions)
+### 🤖 Automatische Updates (GitHub Actions)
 
-Das Repository enthält zwei GitHub Actions Workflows für automatische monatliche Updates:
+| Workflow | Wann | Was |
+|----------|------|-----|
+| `update-statistics.yml` | 1. jedes Monats, 09:00 UTC | Zählt die Defis aller 26 Kantone und ergänzt `historical-data.json` (Schweizer Total und Zahlen pro Kanton). Fehlt ein Kanton, bricht er ab. |
+| `update-europe.yml` | 1. jedes Monats, 10:00 UTC | Fragt die Overpass API für CH, DE, AT, FR, IT, LI ab und schreibt `europe-data.json`. |
+| `update-gemeinden.yml` | jährlich am 15. Februar | Erzeugt Gemeindegrenzen (`reports/kantone/`) und `einwohner.json` neu, damit Gemeindefusionen übernommen werden. |
+| `deploy.yml` | bei Push auf `main` und nach den drei Workflows oben | Lädt die Seite per FTP nach stats.defikarte.ch. |
 
-#### Workflow 1: Schweizer Kantone (`update-statistics.yml`)
-
-1. **Setup:**
-   ```
-   .github/
-     └── workflows/
-         └── update-statistics.yml
-   ```
-
-2. **Funktionsweise:**
-   - Läuft automatisch am **1. jeden Monats um 09:00 UTC**
-   - Lädt alle 26 Kantone-GeoJSON-Dateien
-   - Summiert die Gesamtzahl der Defibrillatoren
-   - Fügt neuen Datenpunkt zu `historical-data.json` hinzu
-   - Committed automatisch mit Nachricht: "📊 Automatisches Update: YYYY-MM-DD - XXXXX Defibrillatoren"
-
-3. **Manuelles Auslösen:**
-   - GitHub Repository → Actions Tab
-   - Workflow "Update Defibrillator Statistics" auswählen
-   - "Run workflow" Button klicken
-
-4. **Voraussetzungen:**
-   - Repository muss `historical-data.json` enthalten
-   - GitHub Actions müssen aktiviert sein
-   - Standard `GITHUB_TOKEN` hat Schreib-Rechte
-
-#### Workflow 2: Nachbarländer (`update-europe.yml`)
-
-1. **Setup:**
-   ```
-   .github/
-     └── workflows/
-         └── update-europe.yml
-   ```
-
-2. **Funktionsweise:**
-   - Läuft automatisch am **1. jeden Monats um 10:00 UTC** (nach dem Schweiz-Workflow)
-   - Fragt Overpass API für CH, DE, AT, FR, IT und LI ab
-   - Schreibt Ergebnisse in `europe-data.json`
-   - Committed; der Upload läuft danach über `deploy.yml`
-
-3. **Manuelles Auslösen (Erstbefüllung):**
-   - GitHub Repository → Actions Tab
-   - Workflow "Update Europe Defibrillator Data" auswählen
-   - "Run workflow" Button klicken
-   - ⚠️ Muss **einmalig manuell** ausgelöst werden um `europe-data.json` initial zu befüllen
+Alle Workflows lassen sich auch manuell starten: Actions → Workflow wählen → "Run workflow".
 
 ## 📊 Ausgewertete Angaben
 
@@ -147,7 +102,7 @@ Monatliche Zählung, ab Oktober 2021 zusätzlich pro Kanton (rückwirkend aus de
 
 `count` ist die kommunizierte Schweizer Gesamtzahl. Fehlt beim monatlichen Lauf ein Kanton, bricht der Workflow ab, statt ein zu tiefes Total zu speichern.
 
-## 🌍 Ländervergleich (`defi_europe.html`)
+## 🌍 Ländervergleich (`europe/defi_europe.html`)
 
 Die Europe-Seite zeigt die Schweiz im Vergleich mit ihren Nachbarländern (DE, AT, FR, IT, LI).
 
@@ -172,9 +127,6 @@ Die Europe-Seite zeigt die Schweiz im Vergleich mit ihren Nachbarländern (DE, A
 }
 ```
 
-### Erstbefüllung:
-Die Datei wird durch den Workflow `update-europe.yml` befüllt. Einmalig manuell auslösen via GitHub Actions → "Update Europe Defibrillator Data" → "Run workflow".
-
 ## 🔧 Aufbau
 
 | Datei | Inhalt |
@@ -188,7 +140,7 @@ Die Datei wird durch den Workflow `update-europe.yml` befüllt. Einmalig manuell
 
 ## 📝 Datenformat
 
-Das Dashboard erwartet GeoJSON-Dateien im folgenden Format:
+Statistik und Reports lesen die GeoJSON-Dateien `defis_kt_<kt>.geojson` aus `defikarte/defi_data`:
 
 ```json
 {
@@ -198,6 +150,7 @@ Das Dashboard erwartet GeoJSON-Dateien im folgenden Format:
       "type": "Feature",
       "properties": {
         "emergency": "defibrillator",
+        "defibrillator:location": "Beim Haupteingang links",
         "access": "yes",
         "indoor": "no",
         "opening_hours": "24/7",
@@ -225,7 +178,7 @@ Alle Kantons- und Kunden-Reports laufen über **eine** Vorlage in `reports/`. Je
 ```text
 stats.defikarte.ch/zh/     → Kanton Zürich
 stats.defikarte.ch/bs/     → Basel-Stadt & Basel-Landschaft (mit Tabs)
-stats.defikarte.ch/luks/   → LUKS-Einzugsgebiet (LU/UR/NW/OW, mit Kundenbranding)
+stats.defikarte.ch/luks/   → LUKS-Einzugsgebiet (LU/UR/NW/OW, Report für das Luzerner Kantonsspital)
 ```
 
 Alternativ funktioniert immer auch `stats.defikarte.ch/reports/?r=<id>`.
@@ -233,8 +186,10 @@ Alternativ funktioniert immer auch `stats.defikarte.ch/reports/?r=<id>`.
 | Datei | Inhalt |
 |-------|--------|
 | `reports/reports.json` | **Liste aller Reports** – hier werden Kunden eingetragen |
-| `reports/index.html`, `report.js`, `report.css` | Vorlage, Logik, Design (gilt für alle Reports) |
+| `reports/index.html`, `reports/report.js` | Vorlage und Logik (gilt für alle Reports) |
+| `reports/i18n.js` | Texte auf Deutsch und Französisch |
 | `reports/geo.js` | Gemeinde-Zuordnung und Auswertung |
+| `assets/brand.css` | Design (gemeinsam mit der Statistik-Seite) |
 | `reports/kantone/<kt>.json` | Gemeindegrenzen, eine Datei pro Kanton (generiert) |
 
 ### Neuen Kanton / Kunden aufschalten
@@ -248,7 +203,7 @@ Einen Eintrag in `reports/reports.json` ergänzen und auf `main` pushen – fert
   "cantons": ["ag", "so"],
   "title": "KSA-Einzugsgebiet",                            // optional, Standard: "Kanton X" bzw. "X & Y"
   "preposition": "im",                                     // optional: "im" / "in"
-  "client": { "short": "KSA", "name": "Kantonsspital Aarau" }  // optional: Kundenbranding in Header, Hero und PDF
+  "client": { "short": "KSA", "name": "Kantonsspital Aarau" }  // optional: "Report für …" im Kopfbereich und Kürzel im PDF
 }
 ```
 
@@ -265,8 +220,8 @@ Optional können einzelne Defis manuell einer Gemeinde zugewiesen werden: `"over
 **Vertriebspartner** – Logo im Header, im Footer und im PDF:
 
 ```jsonc
-"zh": {
-  "cantons": ["zh"],
+"be": {
+  "cantons": ["be"],
   "partner": {
     "name": "sureVIVE",                                               // Alt-Text und Fallback im PDF
     "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png",  // helle Version für dunklen Hintergrund
@@ -296,12 +251,15 @@ python3 -m http.server 8000
 
 | Datei | Beschreibung |
 |-------|-------------|
-| `index.html` | Statistik-Seite (Gesamtzahl, 24/7, Wachstum, Kantone) |
-| `reports/` | Kantons-Reports (eine Vorlage für alle, siehe unten) |
-| `scripts/build_gemeinden.py` | Erzeugt die Gemeindegrenzen für die Reports |
-| `defi_europe.html` | Ländervergleich CH / Nachbarländer |
-| `historical-data.json` | Monatliche CH-Gesamtzahlen (seit 2020) |
+| `index.html`, `assets/` | Statistik-Seite (Gesamtzahl, 24/7, Wachstum, Kantone) |
+| `reports/` | Kantons-Reports (eine Vorlage für alle, siehe oben) |
+| `europe/defi_europe.html` | Ländervergleich CH / Nachbarländer |
+| `historical-data.json` | Monatliche Zahlen: Schweiz seit 2020, pro Kanton seit Oktober 2021 |
 | `europe-data.json` | Defi-Zahlen Nachbarländer (monatlich) |
+| `einwohner.json` | Einwohner pro Kanton (swisstopo) |
+| `img/` | Logo und Kantonswappen |
+| `scripts/build_gemeinden.py` | Erzeugt Gemeindegrenzen und Einwohnerzahlen |
+| `archive/` | Alte, nicht mehr verwendete Kantons-Reports |
 
 ## 🤝 Mitwirken
 
@@ -327,26 +285,26 @@ Die Defibrillator-Daten stammen von OpenStreetMap und unterliegen der [ODbL](htt
 ## 🙏 Danksagungen
 
 - **OpenStreetMap Community** - Für die Erfassung der Defibrillator-Daten
-- **jsDelivr** - Für das kostenlose CDN
-- **Alle Contributors** - Die zur Verbesserung des Dashboards beitragen
+- **swisstopo** - Für Gemeindegrenzen und Einwohnerzahlen
+- **Alle Contributors** - Die zur Verbesserung der Statistik beitragen
 
 ## 📧 Kontakt
 
 Bei Fragen oder Anregungen:
-- GitHub Issues: [Issues erstellen](https://github.com/ihr-username/defikarte-dashboard/issues)
+- GitHub Issues: [Issues erstellen](https://github.com/defikarte/defi_stats/issues)
 - Website: [defikarte.ch](https://defikarte.ch)
 
 ---
 
 ## 🎨 Design & Styleguide
 
-Das Dashboard verwendet das offizielle defikarte.ch Farbschema:
+Statistik-Seite und Reports folgen dem Design von defikarte.ch. Alle Farben sind als CSS-Variablen in `assets/brand.css` definiert:
 
-- **Primärfarbe (Hellgrün)**: `#97C568` - für Buttons, Highlights, positive Werte
-- **Sekundärfarbe (Dunkelgrün)**: `#144430` - für Header, Text, dunkle Elemente
-- **Schriftart**: Poppins
-
-Alle Farben sind in CSS-Variablen definiert und können zentral angepasst werden.
+- **Dunkelgrün** `#154430` – Header, Footer, Text
+- **Hellgrün** `#98C867` – Akzente, hervorgehobene Werte
+- **Verlauf** `#154430 → #659552` – Kopfbereich, Aufruf
+- **Hintergrund** `#F7F6F3`, Karten weiss
+- **Schrift** Poppins (500 für Titel, 300 für Fliesstext)
 
 ---
 
