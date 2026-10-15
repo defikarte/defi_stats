@@ -1,9 +1,21 @@
 {
   "zh": { "cantons": ["zh"] },
-  "gr": { "cantons": ["gr"] },
-  "gl": { "cantons": ["gl"] },
-  "ai": { "cantons": ["ai"] },
-  "ar": { "cantons": ["ar"] },
+  "gr": {
+    "cantons": ["gr"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "gl": {
+    "cantons": ["gl"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "ai": {
+    "cantons": ["ai"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "ar": {
+    "cantons": ["ar"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
   "be": {
     "cantons": ["be"],
     "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
