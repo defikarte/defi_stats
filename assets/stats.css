@@ -95,3 +95,11 @@ tr.detail td { padding: 0 1.25rem 1.25rem; background: var(--cream); text-align:
 .stat-card .icon { position: absolute; top: 1.1rem; right: 1.1rem; color: var(--green-light); }
 .gap-tile .gap-label { display: inline-flex; align-items: center; gap: .5rem; }
 .gap-tile .icon { color: var(--green-mid); flex-shrink: 0; }
+
+/* Hinweis auf den Europa-Vergleich */
+.teaser { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 12px; background: var(--white); border-radius: 12px; padding: 1.1rem 1.25rem; text-decoration: none; color: var(--text); transition: background .15s; }
+.teaser:hover { background: var(--green-tint); }
+.teaser span:first-child { font-weight: 300; font-size: 15px; }
+.teaser strong { font-weight: 500; display: block; }
+.teaser-cta { flex-shrink: 0; font-weight: 500; color: var(--green-mid); }
+@media (max-width: 720px) { .teaser { flex-direction: column; align-items: flex-start; gap: .5rem; } }

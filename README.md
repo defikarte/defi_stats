@@ -13,7 +13,7 @@ Die Statistik-Seite (stats.defikarte.ch) zeigt, wie viele Defibrillatoren in der
 - **Kantone**: sortierbare Tabelle mit Defis, Wachstum, 24/7, Dichte, einsatztauglich und grösster Lücke; aufklappbar mit allen Angaben
 - **Was am meisten fehlt**: fehlende Angaben schweizweit, getrennt nach «wichtig im Notfall» und «Zusatzangaben»
 - **Social-Media-Grafiken** (1080 × 1080 px, Schweiz oder Kanton): nur über `?tools` eingeblendet, z.B. `stats.defikarte.ch/?tools`
-- **Ländervergleich**: Schweiz und Nachbarländer (`europe/defi_europe.html`)
+- **Ländervergleich**: Schweiz und Nachbarländer (`stats.defikarte.ch/europe/`)
 
 **Einsatztauglich erfasst** heisst: Standortbeschreibung, Zugänglichkeit, Öffnungszeiten und Innen/Aussen sind angegeben – die Angaben, die man im Notfall braucht.
 
@@ -102,7 +102,7 @@ Monatliche Zählung, ab Oktober 2021 zusätzlich pro Kanton (rückwirkend aus de
 
 `count` ist die kommunizierte Schweizer Gesamtzahl. Fehlt beim monatlichen Lauf ein Kanton, bricht der Workflow ab, statt ein zu tiefes Total zu speichern.
 
-## 🌍 Ländervergleich (`europe/defi_europe.html`)
+## 🌍 Ländervergleich (`stats.defikarte.ch/europe/`)
 
 Die Europe-Seite zeigt die Schweiz im Vergleich mit ihren Nachbarländern (DE, AT, FR, IT, LI).
 
@@ -253,7 +253,7 @@ python3 -m http.server 8000
 |-------|-------------|
 | `index.html`, `assets/` | Statistik-Seite (Gesamtzahl, 24/7, Wachstum, Kantone) |
 | `reports/` | Kantons-Reports (eine Vorlage für alle, siehe oben) |
-| `europe/defi_europe.html` | Ländervergleich CH / Nachbarländer |
+| `europe/index.html` | Ländervergleich CH / Nachbarländer (`stats.defikarte.ch/europe/`, alte Adresse leitet weiter) |
 | `historical-data.json` | Monatliche Zahlen: Schweiz seit 2020, pro Kanton seit Oktober 2021 |
 | `europe-data.json` | Defi-Zahlen Nachbarländer (monatlich) |
 | `einwohner.json` | Einwohner pro Kanton (swisstopo) |

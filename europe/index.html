@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Defibrillatoren Europa — defikarte.ch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <style>
+    :root {
+      --green: #97C568;
+      --dark: #144430;
+      --bg: #F4F1EB;
+      --white: #FFFFFF;
+      --border: #DDD8CF;
+      --text: #1A2E1A;
+      --muted: #6B7B6B;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); }
+
+    header {
+      background: var(--dark); padding: 0 32px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .hlogo { display: flex; align-items: center; text-decoration: none; }
+    .hdot {
+      width: 28px; height: 28px; background: var(--green);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .hdot svg { width: 16px; height: 16px; }
+    .htitle { font-size: 14px; font-weight: 600; color: #fff; }
+    .htag { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 20px; }
+
+    .hero { background: linear-gradient(135deg, var(--dark) 0%, #1e6644 100%); color: #fff; padding: 3rem 2rem 2.5rem; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 280px; height: 280px; border-radius: 50%; background: rgba(151,197,104,.12); }
+    .hero::after { content: ''; position: absolute; bottom: -40px; left: 30%; width: 180px; height: 180px; border-radius: 50%; background: rgba(151,197,104,.07); }
+    .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero h1 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; line-height: 1.2; margin-bottom: .5rem; }
+    .hero h1 span { color: var(--green); }
+    .hero-sub { font-size: .875rem; font-weight: 300; color: rgba(255,255,255,.7); margin-bottom: 2rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(3, auto); gap: 1rem; width: fit-content; }
+    .hstat { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.15); border-radius: 12px; padding: 1rem 1.25rem; backdrop-filter: blur(4px); transition: background .2s; }
+    .hstat:hover { background: rgba(255,255,255,.14); }
+    .hval { font-size: 2rem; font-weight: 700; color: var(--green); line-height: 1; display: block; }
+    .hlbl { font-size: .75rem; font-weight: 400; color: rgba(255,255,255,.65); margin-top: .3rem; display: block; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 32px 64px; }
+    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(20,68,48,0.06); }
+    .card-head { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-head h2 { font-size: 13px; font-weight: 600; color: var(--dark); }
+
+    .tgroup { display: flex; gap: 3px; background: var(--bg); padding: 3px; border-radius: 8px; }
+    .tgroup button {
+      border: none; background: transparent; font-family: 'Poppins', sans-serif;
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    }
+    .tgroup button.active { background: var(--dark); color: #fff; }
+
+    #map-wrap { padding: 16px; min-height: 380px; position: relative; }
+    #map-svg { width: 100%; height: auto; display: block; }
+    .cpath { stroke: #fff; stroke-width: 0.5; cursor: pointer; transition: opacity 0.15s; }
+    .cpath:hover { opacity: 0.75; stroke: var(--dark); stroke-width: 1.2; }
+    .cpath.nodata { fill: #DDD8CF !important; cursor: default; }
+    .cpath.nodata:hover { opacity: 1; stroke: #fff; stroke-width: 0.5; }
+
+    .legend { padding: 10px 24px 16px; display: flex; align-items: center; gap: 10px; }
+    .llbl { font-size: 10px; color: var(--muted); }
+    .lbar { flex: 1; height: 7px; border-radius: 4px; background: linear-gradient(to right,#d4eab8,#97C568,#2d6a20,#144430); }
+
+    /* Loading */
+    #loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 20px; }
+    .pbg { width: 200px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .pfill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s; width: 0; }
+    .ptxt { font-size: 12px; color: var(--muted); }
+    .pflags { font-size: 16px; min-height: 24px; letter-spacing: 2px; }
+
+    /* Rank */
+    .rank-card { position: sticky; top: 24px; }
+    .rank-body { padding: 12px 0 0; }
+    .srow { display: flex; gap: 4px; padding: 0 16px 10px; }
+    .sbtn {
+      border: none; background: var(--bg); font-family: 'Poppins', sans-serif;
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      padding: 5px 8px; border-radius: 6px; cursor: pointer; flex: 1; transition: all 0.15s;
+    }
+    .sbtn.active { background: var(--dark); color: #fff; }
+    #rlist { max-height: 490px; overflow-y: auto; padding-bottom: 12px; }
+    #rlist::-webkit-scrollbar { width: 3px; }
+    #rlist::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .rrow { display: grid; grid-template-columns: 24px 22px 1fr auto; align-items: center; gap: 8px; padding: 7px 16px; transition: background 0.1s; }
+    .rrow:hover { background: var(--bg); }
+    .rrow.isch { background: rgba(151,197,104,0.10); }
+    .rn { font-size: 11px; font-weight: 700; color: var(--muted); text-align: right; }
+    .rn.top { color: var(--green); }
+    .rf { font-size: 17px; }
+    .rm { font-size: 12px; font-weight: 500; line-height: 1.3; }
+    .rm small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+    .rv { text-align: right; font-size: 12px; font-weight: 700; }
+    .rv small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+
+    #tt {
+      position: fixed; background: var(--dark); color: #fff;
+      padding: 8px 13px; border-radius: 10px; font-size: 12px;
+      pointer-events: none; opacity: 0; transition: opacity 0.1s;
+      z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    #tt b { display: block; font-size: 13px; margin-bottom: 2px; }
+
+    .foot { margin-top: 20px; font-size: 11px; color: var(--muted); text-align: center; }
+    .foot a { color: var(--dark); }
+
+    @media(max-width:800px) {
+      .layout { grid-template-columns: 1fr; }
+      .rank-card { position: static; }
+      main { padding: 24px 16px 48px; }
+      header { padding: 0 16px; }
+      .hero { padding: 2rem 1.25rem; } .hero-stats { grid-template-columns: repeat(2, 1fr); width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="hlogo" href="https://stats.defikarte.ch">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 viewBox="0 0 255.12 46.19" xml:space="preserve" height="36" width="auto">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+	.st1{fill:#97C568;}
+</style>
+<g id="HG"><rect width="255.12" height="46.19" fill="#144430"/></g>
+<g id="Logo">
+	<g>
+		<g>
+			<g>
+				<path class="st0" d="M61.24,19.94c0.72-1.4,1.71-2.48,2.97-3.24c1.25-0.76,2.65-1.13,4.18-1.13c1.17,0,2.28,0.25,3.34,0.76
+					c1.06,0.51,1.9,1.18,2.53,2.03V9.83h4.6v23.99h-4.6v-2.66c-0.56,0.89-1.35,1.6-2.37,2.14c-1.02,0.54-2.19,0.81-3.53,0.81
+					c-1.51,0-2.9-0.39-4.15-1.17c-1.25-0.78-2.24-1.87-2.97-3.29c-0.72-1.41-1.09-3.04-1.09-4.88
+					C60.16,22.96,60.52,21.35,61.24,19.94z M73.64,22c-0.43-0.79-1.02-1.39-1.75-1.82c-0.74-0.42-1.52-0.63-2.37-0.63
+					c-0.84,0-1.62,0.21-2.33,0.62c-0.71,0.41-1.29,1.01-1.73,1.8c-0.44,0.79-0.66,1.72-0.66,2.8c0,1.08,0.22,2.03,0.66,2.84
+					c0.44,0.81,1.03,1.43,1.75,1.86c0.72,0.43,1.5,0.65,2.32,0.65c0.84,0,1.63-0.21,2.37-0.63c0.73-0.42,1.32-1.03,1.75-1.81
+					c0.43-0.79,0.65-1.73,0.65-2.84S74.07,22.79,73.64,22z"/>
+				<path class="st0" d="M99.86,26.2H86.73c0.11,1.3,0.56,2.31,1.36,3.05c0.8,0.74,1.78,1.1,2.95,1.1c1.69,0,2.88-0.72,3.6-2.17
+					h4.89c-0.52,1.73-1.51,3.15-2.98,4.26c-1.47,1.11-3.27,1.67-5.41,1.67c-1.73,0-3.28-0.38-4.65-1.15
+					c-1.37-0.77-2.44-1.85-3.21-3.26c-0.77-1.4-1.15-3.03-1.15-4.86c0-1.86,0.38-3.49,1.13-4.89c0.76-1.4,1.81-2.48,3.18-3.24
+					c1.36-0.76,2.93-1.13,4.7-1.13c1.71,0,3.24,0.37,4.59,1.1c1.35,0.74,2.4,1.78,3.14,3.13s1.12,2.9,1.12,4.65
+					C99.99,25.09,99.95,25.68,99.86,26.2z M95.29,23.15c-0.02-1.17-0.44-2.1-1.26-2.8c-0.82-0.7-1.83-1.05-3.01-1.05
+					c-1.12,0-2.07,0.34-2.84,1.02c-0.77,0.68-1.24,1.63-1.41,2.84H95.29z"/>
+				<path class="st0" d="M111.53,19.58h-3.14v14.23h-4.6V19.58h-2.04v-3.73h2.04v-0.91c0-2.2,0.63-3.82,1.88-4.86
+					c1.25-1.04,3.14-1.52,5.67-1.46v3.82c-1.1-0.02-1.87,0.16-2.3,0.55c-0.43,0.39-0.65,1.09-0.65,2.11v0.75h3.14V19.58z"/>
+				<path class="st0" d="M114.79,12.96c-0.53-0.51-0.79-1.14-0.79-1.9c0-0.76,0.26-1.39,0.79-1.9c0.53-0.51,1.19-0.76,1.99-0.76
+					c0.8,0,1.46,0.25,1.99,0.76c0.53,0.51,0.79,1.14,0.79,1.9c0,0.76-0.27,1.39-0.79,1.9c-0.53,0.51-1.19,0.76-1.99,0.76
+					C115.98,13.72,115.32,13.46,114.79,12.96z M119.02,15.86v17.96h-4.54V15.86H119.02z"/>
+				<path class="st0" d="M134.12,33.81l-6.09-7.65v7.65h-4.54V9.83h4.54v13.65l6.03-7.62h5.9l-7.91,9.01l7.97,8.95H134.12z"/>
+				<path class="st0" d="M141.85,19.94c0.72-1.4,1.71-2.48,2.95-3.24c1.24-0.76,2.63-1.13,4.17-1.13c1.34,0,2.51,0.27,3.52,0.81
+					c1,0.54,1.81,1.22,2.41,2.04v-2.56h4.57v17.96h-4.57v-2.63c-0.58,0.84-1.39,1.54-2.41,2.09c-1.03,0.55-2.21,0.83-3.55,0.83
+					c-1.51,0-2.89-0.39-4.13-1.17c-1.24-0.78-2.23-1.87-2.95-3.29c-0.72-1.41-1.09-3.04-1.09-4.88
+					C140.77,22.96,141.13,21.35,141.85,19.94z M154.25,22c-0.43-0.79-1.02-1.39-1.75-1.82c-0.74-0.42-1.52-0.63-2.37-0.63
+					c-0.84,0-1.62,0.21-2.33,0.62c-0.71,0.41-1.29,1.01-1.73,1.8c-0.44,0.79-0.66,1.72-0.66,2.8c0,1.08,0.22,2.03,0.66,2.84
+					c0.44,0.81,1.03,1.43,1.75,1.86c0.72,0.43,1.5,0.65,2.32,0.65c0.84,0,1.63-0.21,2.37-0.63c0.73-0.42,1.32-1.03,1.75-1.81
+					c0.43-0.79,0.65-1.73,0.65-2.84S154.68,22.79,154.25,22z"/>
+				<path class="st0" d="M170.73,16.41c0.94-0.54,2.01-0.81,3.23-0.81v4.76h-1.2c-1.43,0-2.5,0.34-3.23,1
+					c-0.72,0.67-1.09,1.84-1.09,3.5v8.95h-4.54V15.86h4.54v2.79C169.03,17.69,169.79,16.95,170.73,16.41z"/>
+				<path class="st0" d="M182.94,19.58v8.69c0,0.61,0.15,1.04,0.44,1.31c0.29,0.27,0.78,0.4,1.48,0.4h2.11v3.83h-2.85
+					c-3.82,0-5.74-1.86-5.74-5.58v-8.65h-2.14v-3.73h2.14v-4.44h4.57v4.44h4.02v3.73H182.94z"/>
+				<path class="st0" d="M206.79,26.2h-13.13c0.11,1.3,0.56,2.31,1.36,3.05c0.8,0.74,1.78,1.1,2.95,1.1c1.69,0,2.88-0.72,3.6-2.17
+					h4.89c-0.52,1.73-1.51,3.15-2.98,4.26c-1.47,1.11-3.27,1.67-5.41,1.67c-1.73,0-3.28-0.38-4.65-1.15
+					c-1.37-0.77-2.44-1.85-3.21-3.26c-0.77-1.4-1.15-3.03-1.15-4.86c0-1.86,0.38-3.49,1.13-4.89c0.76-1.4,1.82-2.48,3.18-3.24
+					c1.36-0.76,2.93-1.13,4.7-1.13c1.71,0,3.24,0.37,4.59,1.1c1.35,0.74,2.4,1.78,3.14,3.13c0.75,1.35,1.12,2.9,1.12,4.65
+					C206.92,25.09,206.88,25.68,206.79,26.2z M202.22,23.15c-0.02-1.17-0.44-2.1-1.26-2.8c-0.82-0.7-1.83-1.05-3.01-1.05
+					c-1.12,0-2.07,0.34-2.84,1.02c-0.77,0.68-1.24,1.63-1.41,2.84H202.22z"/>
+				<path class="st0" d="M210.21,33.28c-0.53-0.51-0.79-1.14-0.79-1.9c0-0.76,0.26-1.39,0.79-1.9c0.53-0.51,1.2-0.76,2.03-0.76
+					c0.8,0,1.46,0.25,1.98,0.76c0.52,0.51,0.78,1.14,0.78,1.9c0,0.76-0.26,1.39-0.78,1.9c-0.52,0.51-1.18,0.76-1.98,0.76
+					C211.41,34.04,210.74,33.79,210.21,33.28z"/>
+				<path class="st0" d="M218.62,19.96c0.76-1.39,1.8-2.47,3.14-3.24c1.34-0.77,2.87-1.15,4.6-1.15c2.23,0,4.07,0.56,5.53,1.67
+					c1.46,1.11,2.44,2.67,2.93,4.68h-4.89c-0.26-0.78-0.7-1.39-1.31-1.83c-0.62-0.44-1.38-0.66-2.28-0.66
+					c-1.3,0-2.32,0.47-3.08,1.41c-0.76,0.94-1.13,2.27-1.13,4c0,1.71,0.38,3.03,1.13,3.97c0.76,0.94,1.78,1.41,3.08,1.41
+					c1.84,0,3.04-0.82,3.6-2.46h4.89c-0.5,1.95-1.48,3.49-2.95,4.64c-1.47,1.14-3.31,1.72-5.51,1.72c-1.73,0-3.26-0.38-4.6-1.15
+					c-1.34-0.77-2.39-1.85-3.14-3.24c-0.76-1.39-1.13-3.02-1.13-4.88S217.87,21.35,218.62,19.96z"/>
+				<path class="st0" d="M251.75,16.49c1.06,0.6,1.89,1.47,2.48,2.63c0.59,1.16,0.89,2.54,0.89,4.16v10.54h-4.54V23.9
+					c0-1.43-0.36-2.52-1.07-3.29c-0.71-0.77-1.69-1.15-2.92-1.15c-1.25,0-2.24,0.38-2.97,1.15c-0.72,0.77-1.09,1.86-1.09,3.29v9.92
+					H238V9.83h4.54v8.27c0.58-0.78,1.36-1.39,2.33-1.83c0.97-0.44,2.05-0.66,3.24-0.66C249.48,15.6,250.69,15.89,251.75,16.49z"/>
+			</g>
+		</g>
+		<path class="st1" d="M48.16,30.6l-7.95,0l6.09-6.1c3.51-3.64,5.17-9.09,3.3-14.84c-1.33-4.07-4.38-7.27-8.41-8.72
+			c-6.35-2.28-12.3-0.24-16,3.87c-3.7-4.11-9.66-6.16-16-3.87C5.16,2.4,2.11,5.6,0.78,9.67c-1.87,5.75-0.22,11.2,3.29,14.84
+			L17.46,37.9c0.26,0.26,0.68,0.26,0.94,0l3.61-3.61c0.26-0.26,0.26-0.68,0-0.94l-7.99-7.99l0.01-0.01L8.57,19.9
+			c-2.2-2.2-2.99-5.54-1.76-8.4c2.43-5.62,9.17-6.52,12.98-2.71l4.92,4.92c0.27,0.27,0.7,0.27,0.96,0l4.98-4.98
+			c2.2-2.2,5.54-2.99,8.4-1.76c5.61,2.43,6.52,9.17,2.7,12.98l-5.4,5.4l0.01,0.01l-7.53,7.53c-0.34,0.34-0.1,0.92,0.38,0.92l9.66,0
+			L28.3,45.38c-0.39,0.43,0.18,1.05,0.64,0.71l19.51-14.64c0.11-0.07,0.17-0.21,0.17-0.36C48.63,30.82,48.43,30.6,48.16,30.6z"/>
+	</g>
+</g>
+</svg>
+  </a>
+  <span class="htag">Nachbarländer · Vergleich</span>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Defibrillatoren im<br><span>Vergleich</span></h1>
+    <p class="hero-sub">Schweiz und Nachbarländer · OpenStreetMap · Live via Overpass API</p>
+    <div class="hero-stats">
+      <div class="hstat"><span class="hval" id="h-total">—</span><span class="hlbl">Defibrillatoren total</span></div>
+      <div class="hstat"><span class="hval" id="h-count">—</span><span class="hlbl">Länder erfasst</span></div>
+      <div class="hstat"><span class="hval" id="h-leader">—</span><span class="hlbl">Führend pro 100k</span></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="layout">
+    <!-- KARTE -->
+    <div class="card">
+      <div class="card-head">
+        <h2>Verteilung nach Land</h2>
+        <div class="tgroup">
+          <button class="active" onclick="setMetric('total',this)">Absolut</button>
+          <button onclick="setMetric('per100k',this)">pro 100k</button>
+        </div>
+      </div>
+      <div id="map-wrap">
+        <div id="loading-wrap">
+          <div class="pbg"><div class="pfill" id="pfill"></div></div>
+          <div class="ptxt" id="ptxt">Verbinde mit Overpass API…</div>
+          <div class="pflags" id="pflags"></div>
+        </div>
+      </div>
+      <div class="legend" id="legend" style="display:none">
+        <span class="llbl">weniger</span>
+        <div class="lbar"></div>
+        <span class="llbl">mehr</span>
+      </div>
+    </div>
+
+    <!-- RANGLISTE -->
+    <div class="card rank-card">
+      <div class="card-head"><h2>Rangliste</h2></div>
+      <div class="rank-body">
+        <div class="srow">
+          <button class="sbtn active" onclick="sortBy('total',this)">Absolut</button>
+          <button class="sbtn" onclick="sortBy('per100k',this)">pro 100k</button>
+          <button class="sbtn" onclick="sortBy('name',this)">A–Z</button>
+        </div>
+        <div id="rlist"><div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">Wird geladen…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">
+    Quelle: <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a> via
+    <a href="https://overpass-api.de" target="_blank">Overpass API</a> ·
+    Bevölkerung: UN 2024 · Kartengrundlage: <a href="https://github.com/leakyMirror/map-of-europe" target="_blank">leakyMirror</a> ·
+    Abgerufen: <span id="fts">—</span>
+  </p>
+</main>
+
+<div id="tt"></div>
+
+<script>
+const COUNTRIES = [
+  { iso: 'CH', name: 'Schweiz',       flag: '🇨🇭', pop: 8849  },
+  { iso: 'DE', name: 'Deutschland',    flag: '🇩🇪', pop: 84607 },
+  { iso: 'AT', name: 'Österreich',     flag: '🇦🇹', pop: 9120  },
+  { iso: 'FR', name: 'Frankreich',     flag: '🇫🇷', pop: 68373 },
+  { iso: 'IT', name: 'Italien',        flag: '🇮🇹', pop: 59240 },
+  { iso: 'LI', name: 'Liechtenstein',  flag: '🇱🇮', pop: 39    },
+];
+const ISO_SET = new Set(COUNTRIES.map(c => c.iso));
+
+let defiData = {};   // iso -> count
+let metric = 'total';
+let sortKey = 'total';
+let geoLoaded = false;
+let dataLoaded = false;
+
+// ── FARBEN ────────────────────────────────────────────────────────────────────
+function getVal(iso) {
+  const c = COUNTRIES.find(x => x.iso === iso);
+  if (!c || !defiData[iso]) return 0;
+  return metric === 'per100k' ? defiData[iso] / c.pop : defiData[iso];
+}
+
+function colorFor(iso) {
+  if (!defiData[iso]) return '#DDD8CF';
+  const vals = COUNTRIES.filter(c => defiData[c.iso] > 0).map(c => getVal(c.iso));
+  const max = d3.max(vals) || 1;
+  const t = Math.min(getVal(iso) / max, 1);
+  return d3.interpolate('#d4eab8', '#144430')(t);
+}
+
+function applyColors() {
+  d3.selectAll('.cpath').each(function() {
+    const iso = d3.select(this).attr('data-iso');
+    const hasData = defiData[iso] > 0;
+    d3.select(this)
+      .classed('nodata', !hasData)
+      .style('fill', hasData ? colorFor(iso) : null);
+  });
+}
+
+// ── KARTE ─────────────────────────────────────────────────────────────────────
+async function buildMap(geojson) {
+  const wrap = document.getElementById('map-wrap');
+  const lw = document.getElementById('loading-wrap');
+
+  const W = wrap.clientWidth - 32;
+  const H = Math.round(W * 0.72);
+
+  const svg = d3.select(wrap)
+    .append('svg')
+    .attr('id', 'map-svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', W)
+    .attr('height', H);
+
+  const OUR_ISOS = ISO_SET;
+  const features = geojson.features.filter(f => OUR_ISOS.has(f.properties.ISO2));
+
+  const proj = d3.geoMercator().fitExtent([[10,10],[W-10,H-10]], {
+    type: 'FeatureCollection', features
+  });
+  const path = d3.geoPath().projection(proj);
+
+  const tt = document.getElementById('tt');
+
+  svg.selectAll('path')
+    .data(features)
+    .join('path')
+    .attr('class', 'cpath')
+    .attr('data-iso', d => d.properties.ISO2)
+    .attr('d', path)
+    .on('mousemove', function(event, d) {
+      const iso = d.properties.ISO2;
+      const c = COUNTRIES.find(x => x.iso === iso);
+      if (!c || !defiData[iso]) return;
+      const per = (defiData[iso] / c.pop * 100).toFixed(1);
+      tt.innerHTML = `<b>${c.flag} ${c.name}</b>${defiData[iso].toLocaleString('de-CH')} Defis &nbsp;·&nbsp; ${per} pro 100k`;
+      tt.style.opacity = 1;
+      tt.style.left = (event.clientX + 14) + 'px';
+      tt.style.top = (event.clientY - 48) + 'px';
+    })
+    .on('mouseleave', () => { tt.style.opacity = 0; });
+
+  if (lw) lw.remove();
+  document.getElementById('legend').style.display = 'flex';
+
+  geoLoaded = true;
+  if (dataLoaded) applyColors();
+}
+
+// ── RANGLISTE ─────────────────────────────────────────────────────────────────
+function buildRank() {
+  const sorted = [...COUNTRIES].filter(c => defiData[c.iso] > 0);
+  applySort(sorted);
+  document.getElementById('rlist').innerHTML = sorted.length ? sorted.map((c, i) => {
+    const tot = defiData[c.iso].toLocaleString('de-CH');
+    const per = (defiData[c.iso] / c.pop * 100).toFixed(1);
+    const rk = i + 1;
+    return `<div class="rrow${c.iso === 'CH' ? ' isch' : ''}">
+      <span class="rn${rk <= 3 ? ' top' : ''}">${rk}</span>
+      <span class="rf">${c.flag}</span>
+      <span class="rm">${c.name}<small>${c.pop.toLocaleString('de-CH')}k Einw.</small></span>
+      <span class="rv">${tot}<small>${per}/100k</small></span>
+    </div>`;
+  }).join('') : '<div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">Keine Daten</div>';
+}
+
+function applySort(arr) {
+  if (sortKey === 'total')   arr.sort((a,b) => (defiData[b.iso]||0) - (defiData[a.iso]||0));
+  else if (sortKey === 'per100k') arr.sort((a,b) => defiData[b.iso]/b.pop - defiData[a.iso]/a.pop);
+  else arr.sort((a,b) => a.name.localeCompare(b.name,'de'));
+}
+
+function sortBy(key, btn) {
+  sortKey = key;
+  document.querySelectorAll('.sbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dataLoaded) buildRank();
+}
+
+function setMetric(m, btn) {
+  metric = m;
+  document.querySelectorAll('.tgroup button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (geoLoaded && dataLoaded) applyColors();
+}
+
+// ── DATEN LADEN ──────────────────────────────────────────────────────────────
+
+async function loadData() {
+  const pfill = document.getElementById('pfill');
+  const ptxt  = document.getElementById('ptxt');
+  const pflags = document.getElementById('pflags');
+
+  ptxt.textContent = 'Lade Daten…';
+  pflags.textContent = '🌍';
+  pfill.style.width = '20%';
+
+  // 1. Versuche europe-data.json zu laden (lokal, dann CDN)
+  let loaded = false;
+  const sources = [
+    '../europe-data.json?t=' + Date.now(),
+    'https://raw.githubusercontent.com/defikarte/defi_stats/main/europe-data.json?t=' + Date.now(),
+  ];
+
+  for (const src of sources) {
+    try {
+      const r = await fetch(src);
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (j.countries && Object.values(j.countries).some(v => v > 0)) {
+        COUNTRIES.forEach(c => { defiData[c.iso] = j.countries[c.iso] || 0; });
+        // Länder, die beim letzten Abruf nicht erreichbar waren, behalten einen älteren Stand
+        const older = Object.entries(j.carried_over || {}).map(([iso, d]) =>
+          `${COUNTRIES.find(c => c.iso === iso)?.name || iso}: ${new Date(d).toLocaleDateString('de-CH')}`);
+        document.getElementById('fts').textContent = new Date(j.updated).toLocaleDateString('de-CH')
+          + (older.length ? ` (älterer Stand – ${older.join(', ')})` : '');
+        loaded = true;
+        pfill.style.width = '100%';
+        ptxt.textContent = 'Daten geladen';
+        pflags.textContent = COUNTRIES.map(c => c.flag).join(' ');
+        break;
+      }
+    } catch(e) { continue; }
+  }
+
+  if (!loaded) {
+    ptxt.textContent = '⚠️ Noch keine Daten — bitte den Workflow "Update Europe" in GitHub Actions manuell auslösen.';
+    pfill.style.width = '100%';
+  }
+
+  // Hero-Stats
+  const total = Object.values(defiData).reduce((a,b) => a+b, 0);
+  document.getElementById('h-total').textContent = total > 0 ? total.toLocaleString('de-CH') : '—';
+  document.getElementById('h-count').textContent = COUNTRIES.filter(c => defiData[c.iso] > 0).length || '—';
+  const leader = COUNTRIES.filter(c => defiData[c.iso] > 0)
+    .reduce((best, c) => (!best || defiData[c.iso]/c.pop > defiData[best.iso]/best.pop) ? c : best, null);
+  if (leader) document.getElementById('h-leader').textContent = leader.flag + ' ' + leader.name;
+
+  dataLoaded = true;
+  if (geoLoaded) applyColors();
+  buildRank();
+}
+
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    // GeoJSON und Overpass parallel starten
+    const [geojson] = await Promise.all([
+      fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson').then(r => r.json()),
+      loadData()
+    ]);
+    await buildMap(geojson);
+  } catch(e) {
+    console.error('Init error:', e);
+    document.getElementById('ptxt').textContent = 'Fehler: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
