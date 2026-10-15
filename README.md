@@ -254,6 +254,14 @@ Einen Eintrag in `reports/reports.json` ergänzen und auf `main` pushen – fert
 
 Optional können einzelne Defis manuell einer Gemeinde zugewiesen werden: `"overrides": { "node/123456": "Bern" }`.
 
+**Sprache** – Reports gibt es auf Deutsch und Französisch (Texte in `reports/i18n.js`):
+
+- GE, NE, VD, JU: standardmässig Französisch, mit Umschalter FR | DE
+- BE, FR, VS (zweisprachig): standardmässig Deutsch, mit Umschalter DE | FR
+- alle anderen: nur Deutsch
+- fest einstellen mit `"lang": "fr"`, verlinken mit `?lang=fr` (z.B. `stats.defikarte.ch/be/?lang=fr`)
+- eigener Titel auf Französisch: `"title_fr": "…"`, optional `"preposition_fr": "dans la"`
+
 **Vertriebspartner** – Logo im Header, im Footer und im PDF:
 
 ```jsonc

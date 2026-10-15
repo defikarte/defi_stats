@@ -1,25 +1,27 @@
 // Generischer Defi-Report: /<id>/ (beim Deploy erzeugt) oder /reports/?r=<id>, Konfiguration in reports.json
-import { KANTONE, DATA_BASE, buildIndex, assign, summarize, is24h } from './geo.js';
+// Sprache: Standard je nach Kanton (siehe i18n.js), umschaltbar mit ?lang=de|fr
+import { DATA_BASE, buildIndex, assign, summarize } from './geo.js';
+import { STRINGS, languagesFor } from './i18n.js';
 
 const BADGE_COLORS = [['#EEF5E6', '#30805D'], ['#E3EEF4', '#24576E'], ['#F6EEDF', '#8A5A14'], ['#F3E6E6', '#8A2E2E'], ['#ECE8F4', '#4F3B7A'], ['#E6F2EF', '#1F6656']];
 const $ = id => document.getElementById(id);
-const fmt = n => n.toLocaleString('de-CH');
 const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
 
-let cfg, assigned = [], rows = [], gemeindeCount = {};
+let cfg, t = STRINGS.de, lang = 'de', assigned = [], rows = [], gemeindeCount = {};
 let activeTab = 'all', sortKey = 'total', sortDir = -1;
 
+const fmt = n => n.toLocaleString(t.locale);
+// jsPDF-Standardschriften kennen den schmalen Leerschlag (fr-CH: 3 626) nicht
+const pdfText = s => String(s).replace(/ /g, ' ');
+
 function withDefaults(id, c) {
-  const single = c.cantons.length === 1;
-  const ktNames = c.cantons.map(k => KANTONE[k]);
   return {
     id,
-    title: single ? `Kanton ${ktNames[0]}` : ktNames.join(' & '),
-    preposition: single || c.title ? 'im' : 'in',
     overrides: {},
     ...c,
-    multi: !single,
-    tabLabel(tab) { return tab === 'all' ? this.title + (this.multi ? ` (${this.cantons.map(k => k.toUpperCase()).join('/')})` : '') : KANTONE[tab]; },
+    multi: c.cantons.length > 1,
+    get titleText() { return t.title(this); },
+    tabLabel(tab) { return tab === 'all' ? this.titleText + (this.multi ? ` (${this.cantons.map(k => k.toUpperCase()).join('/')})` : '') : t.canton(tab); },
   };
 }
 
@@ -27,6 +29,22 @@ async function getJson(url, label) {
   const res = await fetch(url, { cache: 'no-cache' });   // immer beim Server nachfragen (304, wenn unverändert)
   if (!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
   return res.json();
+}
+
+function chooseLanguage() {
+  const { def, langs } = languagesFor(cfg);
+  const wanted = new URLSearchParams(location.search).get('lang');
+  lang = langs.includes(wanted) ? wanted : def;
+  t = STRINGS[lang];
+  document.documentElement.lang = lang;
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t[el.dataset.i18n];
+  for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = t[el.dataset.i18nPlaceholder];
+  if (langs.length > 1) {
+    // Absolute Links, weil <base href="/reports/"> relative Links umbiegen würde
+    const url = l => { const u = new URL(location.href); u.searchParams.set('lang', l); return u.pathname + u.search; };
+    $('lang-switch').innerHTML = langs.map(l => `<a href="${url(l)}"${l === lang ? ' class="active" aria-current="true"' : ''}>${l.toUpperCase()}</a>`).join('');
+    $('lang-switch').hidden = false;
+  }
 }
 
 async function loadData() {
@@ -39,34 +57,35 @@ async function loadData() {
       return;
     }
     cfg = withDefaults(id, all[id]);
+    chooseLanguage();
     renderHeader();
 
-    msg.textContent = `Lade ${cfg.multi ? cfg.cantons.length + ' Kantone' : 'Kanton ' + KANTONE[cfg.cantons[0]]} von GitHub…`;
+    msg.textContent = t.loadingGithub;
     const [gemeinden, defis] = await Promise.all([
       Promise.all(cfg.cantons.map(k => getJson(`kantone/${k}.json`, `Gemeinden ${k.toUpperCase()}`))),
       Promise.all(cfg.cantons.map(k => getJson(`${DATA_BASE}defis_kt_${k}.geojson`, k.toUpperCase()))),
     ]);
 
-    msg.textContent = 'Daten verarbeiten…';
+    msg.textContent = t.processing;
     const index = buildIndex(gemeinden);
     for (const g of index.gemeinden) gemeindeCount[g.canton] = (gemeindeCount[g.canton] || 0) + 1;
     assigned = defis.flatMap(d => d.features || []).map(feature => ({ feature, gemeinde: assign(index, feature, cfg.overrides) }));
-    rows = summarize(assigned);
+    rows = summarize(assigned).map(r => r.bfs ? r : { ...r, name: t.unknown });
 
     renderStats();
     renderTabs();
-    $('last-updated').textContent = 'Geladen: ' + new Date().toLocaleString('de-CH');
+    $('last-updated').textContent = t.loaded + new Date().toLocaleString(t.locale);
     $('pdf-btn').disabled = $('csv-btn').disabled = false;
     render();
   } catch (e) {
-    msg.textContent = 'Fehler: ' + e.message;
+    msg.textContent = t.error + e.message;
   }
 }
 
 function renderHeader() {
-  const { client, title, preposition, cantons, multi } = cfg;
-  document.title = `Defibrillatoren ${title} — defikarte.ch`;
-  $('eyebrow').textContent = client ? `Report für ${client.name}` : 'Report';
+  const { client, cantons, multi } = cfg;
+  document.title = `${t.defis} ${cfg.titleText} — defikarte.ch`;
+  $('eyebrow').textContent = client ? t.reportFor(client.name) : t.report;
   if (cfg.partner) {
     for (const el of [$('header-partner'), $('footer-partner')]) {
       const img = el.querySelector('img');
@@ -76,12 +95,12 @@ function renderHeader() {
       el.hidden = false;
     }
   }
-  $('title').innerHTML = `Defibrillatoren ${preposition} <span></span>`;
-  $('title').querySelector('span').textContent = title;
+  $('title').innerHTML = `${t.prefix(cfg)} <span></span>`;
+  $('title').querySelector('span').textContent = cfg.titleText;
   $('wappen').classList.toggle('many', cantons.length > 1);
-  $('wappen').innerHTML = cantons.map(k => `<img src="../img/wappen/${k}.png" alt="Wappen Kanton ${KANTONE[k]}" title="${KANTONE[k]}">`).join('');
-  if (multi) $('subtitle').textContent = `Kantone ${cantons.map(k => KANTONE[k]).join(' · ')} · Auswertung pro Gemeinde · Daten aus OpenStreetMap`;
-  $('source').textContent = 'Datenquelle: defikarte/defi_data · ' + cantons.map(k => `defis_kt_${k}.geojson`).join(' · ');
+  $('wappen').innerHTML = cantons.map(k => `<img src="../img/wappen/${k}.png" alt="${t.wappenAlt(k)}" title="${t.canton(k)}">`).join('');
+  $('subtitle').textContent = multi ? t.subtitleMulti(cantons) : t.subtitle;
+  $('source').textContent = `${t.source}${t.colon}defikarte/defi_data · ` + cantons.map(k => `defis_kt_${k}.geojson`).join(' · ');
   $('year').textContent = new Date().getFullYear();
   const style = document.createElement('style');
   style.textContent = cantons.map((k, i) => { const [bg, fg] = BADGE_COLORS[i % BADGE_COLORS.length]; return `.kt-badge.${k}{background:${bg};color:${fg}}`; }).join('');
@@ -97,16 +116,16 @@ function renderStats() {
   const total = rows.reduce((s, r) => s + r.total, 0);
   const total24 = rows.reduce((s, r) => s + r.h24, 0);
   const allGem = Object.values(gemeindeCount).reduce((a, b) => a + b, 0);
-  const cards = [[fmt(total), 'Defibrillatoren total', true]];
-  if (cfg.multi) for (const k of cfg.cantons) cards.push([fmt(viewRows(k).reduce((s, r) => s + r.total, 0)), `${KANTONE[k]} (${k.toUpperCase()})`]);
-  cards.push([fmt(total24), 'davon 24/7 erreichbar'], [pct(total24, total) + ' %', 'Anteil 24/7'], [rows.length, `Gemeinden mit Defi (von ${allGem})`]);
+  const cards = [[fmt(total), t.statTotal, true]];
+  if (cfg.multi) for (const k of cfg.cantons) cards.push([fmt(viewRows(k).reduce((s, r) => s + r.total, 0)), `${t.canton(k)} (${k.toUpperCase()})`]);
+  cards.push([fmt(total24), t.stat24], [pct(total24, total) + ' %', t.statShare], [rows.length, t.statGem(allGem)]);
   $('stats').classList.toggle('compact', cards.length > 4);
   $('stats').innerHTML = cards.map(([v, l, hl]) => `<div class="stat-card${hl && cfg.client ? ' highlight' : ''}"><div class="stat-val">${v}</div><div class="stat-lbl">${l}</div></div>`).join('');
 }
 
 function renderTabs() {
   if (!cfg.multi) return;
-  const tabs = [['all', 'Alle Kantone'], ...cfg.cantons.map(k => [k, KANTONE[k]])];
+  const tabs = [['all', t.allCantons], ...cfg.cantons.map(k => [k, t.canton(k)])];
   $('tabs').innerHTML = tabs.map(([k, l]) => `<button class="tab-btn${k === activeTab ? ' active' : ''}" data-tab="${k}">${l} <span class="tab-tag">${viewRows(k).length}</span></button>`).join('');
 }
 
@@ -116,17 +135,17 @@ function render() {
   const filtered = view.filter(r => r.name.toLowerCase().includes(q));
   const cmp = {
     rank: (a, b) => a.rank - b.rank,
-    name: (a, b) => a.name.localeCompare(b.name, 'de'),
+    name: (a, b) => a.name.localeCompare(b.name, lang),
     kt: (a, b) => a.canton.localeCompare(b.canton),
     total: (a, b) => a.total - b.total,
     h24: (a, b) => a.h24 - b.h24,
     pct: (a, b) => a.h24 / a.total - b.h24 / b.total,
   }[sortKey];
   const sorted = [...filtered].sort((a, b) => sortDir * cmp(a, b));
-  $('result-count').textContent = filtered.length < view.length ? `${filtered.length} von ${view.length} Gemeinden` : `${view.length} Gemeinden`;
+  $('result-count').textContent = t.count(filtered.length, view.length);
 
   const showKt = cfg.multi && activeTab === 'all';
-  const cols = [['rank', '#', 'left'], ['name', 'Gemeinde', 'left'], ...(showKt ? [['kt', 'Kt.', 'left']] : []), ['total', 'Total'], ['h24', '24/7'], ['pct', 'Anteil 24h']];
+  const cols = [['rank', '#', 'left'], ['name', t.colGem, 'left'], ...(showKt ? [['kt', t.colKt, 'left']] : []), ['total', 'Total'], ['h24', t.col24], ['pct', t.colShare]];
   const icon = k => sortKey === k ? (sortDir === -1 ? '↓' : '↑') : '';
   const thead = `<thead><tr>${cols.map(([k, l, cls = '']) => `<th class="${cls}${sortKey === k ? ' sorted' : ''}" data-sort="${k}">${l} <span>${icon(k)}</span></th>`).join('')}</tr></thead>`;
   const tbody = sorted.map(r => {
@@ -158,7 +177,7 @@ function switchTab(tab) {
 function fileName(ext) {
   const today = new Date().toLocaleDateString('de-CH').replace(/\./g, '-');
   const part = (activeTab === 'all' ? cfg.id : `${cfg.id}-${activeTab}`).replace(/_/g, '-');
-  return `defibrillatoren-${part}-${today}.${ext}`;
+  return `${t.filePrefix}-${part}-${today}.${ext}`;
 }
 
 function loadImage(src, crossOrigin) {
@@ -176,7 +195,7 @@ async function exportPDF() {
   if (!exportRows.length) return;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const W = 210, today = new Date().toLocaleDateString('de-CH');
+  const W = 210, today = new Date().toLocaleDateString(t.locale);
   const total = exportRows.reduce((s, r) => s + r.total, 0);
   const total24 = exportRows.reduce((s, r) => s + r.h24, 0);
   const label = cfg.tabLabel(activeTab);
@@ -190,14 +209,14 @@ async function exportPDF() {
     doc.text(cfg.client.short, W - 14, 11, { align: 'right' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(180, 220, 160);
   }
-  doc.text(`Stand: ${today}`, W - 14, cfg.client ? 17 : 12, { align: 'right' });
+  doc.text(`${t.pdfStand}${t.colon}${today}`, W - 14, cfg.client ? 17 : 12, { align: 'right' });
   doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(255, 255, 255);
-  doc.text(activeTab === 'all' && !cfg.multi ? `Defibrillatoren ${cfg.preposition} ${cfg.title}` : `Defibrillatoren — ${label}`, 14, 30);
+  doc.text(pdfText(activeTab === 'all' && !cfg.multi ? `${t.prefix(cfg)} ${cfg.titleText}` : `${t.defis} — ${label}`), 14, 30);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(180, 220, 160);
-  doc.text(`Datenquelle: defikarte/defi_data · OpenStreetMap · ${files}`, 14, 37);
+  doc.text(`${t.source}${t.colon}defikarte/defi_data · OpenStreetMap · ${files}`, 14, 37);
   if (cfg.partner) {
     doc.setFontSize(7); doc.setTextColor(180, 220, 160);
-    doc.text('Partner', W - 14, 25, { align: 'right' });
+    doc.text(t.partner, W - 14, 25, { align: 'right' });
     try {
       // Klappt nur, wenn der Logo-Server CORS erlaubt; sonst steht der Name als Text da
       const img = await loadImage(cfg.partner.logo, true);
@@ -210,12 +229,12 @@ async function exportPDF() {
   }
   doc.setFillColor(152, 200, 103); doc.rect(0, 43, W, 1.5, 'F');
 
-  const boxes = [[fmt(total), 'Defibrillatoren total'], [fmt(total24), 'davon 24/7 erreichbar'], [pct(total24, total) + '%', 'Anteil 24/7'], [exportRows.length, 'Gemeinden mit Defi']];
+  const boxes = [[fmt(total), t.statTotal], [fmt(total24), t.stat24], [pct(total24, total) + '%', t.statShare], [exportRows.length, t.pdfGem]];
   boxes.forEach(([v, l], i) => {
     const x = 14 + i * 47.5;
     doc.setFillColor(238, 245, 230); doc.roundedRect(x, 48, 44, 20, 2, 2, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(21, 68, 48);
-    doc.text(String(v), x + 22, 60, { align: 'center' });
+    doc.text(pdfText(v), x + 22, 60, { align: 'center' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(100, 100, 100);
     doc.text(l, x + 22, 65, { align: 'center' });
   });
@@ -223,7 +242,7 @@ async function exportPDF() {
   const showKt = cfg.multi && activeTab === 'all';
   doc.autoTable({
     startY: 73,
-    head: [['#', 'Gemeinde', ...(showKt ? ['Kt.'] : []), 'Total', '24/7', 'Anteil 24h']],
+    head: [['#', t.colGem, ...(showKt ? [t.colKt] : []), 'Total', t.col24, t.colShare]],
     body: exportRows.map(r => [r.rank, r.name, ...(showKt ? [r.canton.toUpperCase()] : []), r.total, r.h24 > 0 ? r.h24 : '—', pct(r.h24, r.total) + '%']),
     styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 2.5 },
     headStyles: { fillColor: [21, 68, 48], textColor: 255, fontStyle: 'bold' },
@@ -236,8 +255,8 @@ async function exportPDF() {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(21, 68, 48);
       doc.text('defikarte.ch', 14, 291);
       doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 120, 120);
-      doc.text(`Defibrillatoren ${label}${cfg.client ? ' · ' + cfg.client.short : ''} · defikarte/defi_data · OpenStreetMap`, W / 2, 291, { align: 'center' });
-      doc.text('Seite ' + d.pageNumber, W - 14, 291, { align: 'right' });
+      doc.text(pdfText(`${t.defis} – ${label}${cfg.client ? ' · ' + cfg.client.short : ''} · defikarte/defi_data · OpenStreetMap`), W / 2, 291, { align: 'center' });
+      doc.text(`${t.pdfPage} ${d.pageNumber}`, W - 14, 291, { align: 'right' });
     },
   });
   doc.save(fileName('pdf'));
@@ -246,7 +265,7 @@ async function exportPDF() {
 function exportCSV() {
   const list = assigned.filter(a => activeTab === 'all' || a.gemeinde?.canton === activeTab);
   if (!list.length) return;
-  const cols = ['gemeinde', ...(cfg.multi ? ['kanton'] : []), 'latitude', 'longitude', 'opening_hours', 'access', 'operator', 'name', 'phone', 'description', 'indoor', 'level', 'note', 'osm_id', 'bfs_nr', 'location'];
+  const cols = [t.csvGem, ...(cfg.multi ? [t.csvKt] : []), 'latitude', 'longitude', 'opening_hours', 'access', 'operator', 'name', 'phone', 'description', 'indoor', 'level', 'note', 'osm_id', 'bfs_nr', 'location'];
   const esc = v => {
     if (v === null || v === undefined) return '';
     const s = String(v).replace(/"/g, '""');
@@ -257,7 +276,7 @@ function exportCSV() {
     const p = f.properties || {};
     const [lon, lat] = f.geometry?.coordinates || [];
     lines.push([
-      g?.label || 'Unbekannt', ...(cfg.multi ? [(g?.canton || '').toUpperCase()] : []),
+      g?.label || t.unknown, ...(cfg.multi ? [(g?.canton || '').toUpperCase()] : []),
       lat ? lat.toFixed(6) : '', lon ? lon.toFixed(6) : '',
       p.opening_hours, p.access, p.operator, p.name, p.phone, p.description, p.indoor, p.level, p.note,
       f.id || p.id || p['@id'] || '', g?.bfs, p['defibrillator:location'],
@@ -273,7 +292,7 @@ function exportCSV() {
 }
 
 $('search').addEventListener('input', render);
-$('pdf-btn').addEventListener('click', () => exportPDF().catch(e => alert('PDF-Export fehlgeschlagen: ' + e.message)));
+$('pdf-btn').addEventListener('click', () => exportPDF().catch(e => alert(t.pdfFailed + e.message)));
 $('csv-btn').addEventListener('click', exportCSV);
 $('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) switchTab(b.dataset.tab); });
 $('table-wrap').addEventListener('click', e => { const th = e.target.closest('[data-sort]'); if (th) sortBy(th.dataset.sort); });
