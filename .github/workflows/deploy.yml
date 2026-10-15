@@ -1,0 +1,56 @@
+name: Deploy stats.defikarte.ch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Erlaubt manuelles Auslösen
+  # Commits der Update-Workflows (mit GITHUB_TOKEN) lösen kein "push" aus – deshalb hier nachziehen
+  workflow_run:
+    workflows:
+      - Update Defibrillator Statistics
+      - Update Europe Defibrillator Data
+      - Update Gemeindegrenzen
+    types: [completed]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Report-Seiten erzeugen (/<id>/ für jeden Eintrag in reports.json)
+        run: |
+          for ID in $(jq -r 'keys[]' reports/reports.json); do
+            mkdir -p "$ID"
+            cp reports/index.html "$ID/index.html"
+            echo "  /$ID/"
+          done
+
+      - name: Upload via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_PATH }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.DS_Store
+            .github/**
+            archive/**
+            scripts/**
+            README.md
+            LICENSE
+            screenshot.png
+            defikarte-praesentation.html

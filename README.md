@@ -67,14 +67,15 @@ http://localhost:8000/defikarte-dashboard.html
 
 ### Deployment
 
-Das Dashboard ist eine statische HTML-Datei und kann auf jedem Webserver gehostet werden:
+Deployt wird automatisch ab GitHub nach **stats.defikarte.ch** (Workflow `deploy.yml`, per FTP):
 
-- GitHub Pages
-- Netlify
-- Vercel
-- Ihr eigener Webserver
+- bei jedem Push auf `main`
+- nach jedem erfolgreichen Lauf der Update-Workflows (Statistik, Europa, Gemeindegrenzen)
+- manuell: Actions → "Deploy stats.defikarte.ch" → "Run workflow"
 
-Einfach die `defikarte-dashboard.html`, `historical-data.json` und `europe-data.json` hochladen und fertig!
+Dabei wird für jeden Eintrag in `reports/reports.json` die Seite `/<id>/` erzeugt (z.B. `stats.defikarte.ch/zh/`). Hochgeladen werden nur geänderte Dateien. Nicht hochgeladen werden `.github/`, `archive/`, `scripts/`, `README.md`, `LICENSE`, `screenshot.png` und `defikarte-praesentation.html`.
+
+**Secrets:** `FTP_HOST`, `FTP_USER`, `FTP_PASS`, `FTP_PATH` (Webroot von stats.defikarte.ch)
 
 ### 🤖 Automatische Statistik-Updates (GitHub Actions)
 
@@ -119,15 +120,13 @@ Das Repository enthält zwei GitHub Actions Workflows für automatische monatlic
    - Läuft automatisch am **1. jeden Monats um 10:00 UTC** (nach dem Schweiz-Workflow)
    - Fragt Overpass API für CH, DE, AT, FR, IT und LI ab
    - Schreibt Ergebnisse in `europe-data.json`
-   - Committed und uploaded via FTP
+   - Committed; der Upload läuft danach über `deploy.yml`
 
 3. **Manuelles Auslösen (Erstbefüllung):**
    - GitHub Repository → Actions Tab
    - Workflow "Update Europe Defibrillator Data" auswählen
    - "Run workflow" Button klicken
    - ⚠️ Muss **einmalig manuell** ausgelöst werden um `europe-data.json` initial zu befüllen
-
-4. **Secrets benötigt:** `FTP_HOST`, `FTP_USER`, `FTP_PASS`, `FTP_PATH`
 
 ## 📊 Analysierte Attribute
 
@@ -316,21 +315,64 @@ Das Dashboard erwartet GeoJSON-Dateien im folgenden Format:
 }
 ```
 
+## 🏥 Kantons-Reports (Dienstleistung)
+
+Alle Kantons- und Kunden-Reports laufen über **eine** Vorlage in `reports/`. Jeder Eintrag in `reports/reports.json` wird beim Deploy zu einer eigenen URL:
+
+```text
+stats.defikarte.ch/zh/     → Kanton Zürich
+stats.defikarte.ch/bs/     → Basel-Stadt & Basel-Landschaft (mit Tabs)
+stats.defikarte.ch/luks/   → LUKS-Einzugsgebiet (LU/UR/NW/OW, mit Kundenbranding)
+```
+
+Alternativ funktioniert immer auch `stats.defikarte.ch/reports/?r=<id>`.
+
+| Datei | Inhalt |
+|-------|--------|
+| `reports/reports.json` | **Liste aller Reports** – hier werden Kunden eingetragen |
+| `reports/index.html`, `report.js`, `report.css` | Vorlage, Logik, Design (gilt für alle Reports) |
+| `reports/geo.js` | Gemeinde-Zuordnung und Auswertung |
+| `reports/gemeinden/<kt>.json` | Gemeindegrenzen aller 26 Kantone (generiert) |
+
+### Neuen Kanton / Kunden aufschalten
+
+Einen Eintrag in `reports/reports.json` ergänzen und auf `main` pushen – fertig. Der Schlüssel ist die URL (`"sg"` → `stats.defikarte.ch/sg/`). Kein HTML, keine Gemeindelisten.
+
+```jsonc
+"sg": { "cantons": ["sg"] },                               // → "Defibrillatoren im Kanton St. Gallen"
+
+"ksa": {                                                   // mehrere Kantone → automatisch Tabs + Kantonsspalte
+  "cantons": ["ag", "so"],
+  "title": "KSA-Einzugsgebiet",                            // optional, Standard: "Kanton X" bzw. "X & Y"
+  "preposition": "im",                                     // optional: "im" / "in"
+  "client": { "short": "KSA", "name": "Kantonsspital Aarau" }  // optional: Kundenbranding in Header, Hero und PDF
+}
+```
+
+Optional können einzelne Defis manuell einer Gemeinde zugewiesen werden: `"overrides": { "node/123456": "Bern" }`.
+
+### Gemeinde-Zuordnung
+
+Jeder Defi wird über seine GPS-Koordinate der **politischen Gemeinde** zugeordnet (Punkt-in-Polygon mit den offiziellen Grenzen von swisstopo). Nur wenn ein Punkt ausserhalb aller Gemeinden liegt (z.B. auf einem See), wird das Adressfeld bzw. die nächstgelegene Gemeinde verwendet. Ortsteile, Schreibvarianten und Betreiber-Listen müssen deshalb nicht mehr gepflegt werden.
+
+Die Grenzen (`reports/gemeinden/`) werden mit `python3 scripts/build_gemeinden.py` aus [swissBOUNDARIES3D](https://www.swisstopo.admin.ch/de/landschaftsmodell-swissboundaries3d) erzeugt (auf 10 m vereinfacht, Abweichung gegenüber den Originalgrenzen < 0,05 % der Defis). Der Workflow `update-gemeinden.yml` macht das jährlich im Februar automatisch, damit Gemeindefusionen übernommen werden.
+
+### Lokal testen
+
+```bash
+python3 -m http.server 8000
+# → http://localhost:8000/reports/?r=be
+```
+
+(Direktes Öffnen per `file://` funktioniert nicht, da die Konfiguration per `fetch` geladen wird.)
+
 ## 🗂️ Alle Dateien im Überblick
 
 | Datei | Beschreibung |
 |-------|-------------|
 | `defikarte-dashboard.html` | Hauptdashboard (alle Kantone, Ranking, Wachstum) |
-| `defi_report_be.html` | Kanton Bern |
-| `defi_report_zh.html` | Kanton Zürich |
-| `defi_report_bs_bl.html` | Basel-Stadt & Basel-Landschaft |
-| `defi_report_luks.html` | LUKS-Region (LU/UR/NW/OW) |
-| `defi_report_soh.html` | Kanton Solothurn |
-| `defi_report_ju.html` | Kanton Jura |
-| `defi_report_ge.html` | Kanton Genf |
-| `defi_report_ne.html` | Kanton Neuenburg |
-| `defi_report_vd.html` | Kanton Waadt |
-| `defi_report_ti.html` | Kanton Tessin |
+| `reports/` | Kantons-Reports (eine Vorlage für alle, siehe unten) |
+| `scripts/build_gemeinden.py` | Erzeugt die Gemeindegrenzen für die Reports |
 | `defi_europe.html` | Ländervergleich CH / Nachbarländer |
 | `historical-data.json` | Monatliche CH-Gesamtzahlen (seit 2020) |
 | `europe-data.json` | Defi-Zahlen Nachbarländer (monatlich) |

@@ -1,0 +1,22 @@
+{
+  "zh": { "cantons": ["zh"] },
+  "be": { "cantons": ["be"] },
+  "ge": { "cantons": ["ge"] },
+  "ju": { "cantons": ["ju"] },
+  "ne": { "cantons": ["ne"] },
+  "vd": { "cantons": ["vd"] },
+  "bs": {
+    "cantons": ["bs", "bl"],
+    "title": "Basel-Stadt & Basel-Landschaft",
+    "preposition": "in"
+  },
+  "luks": {
+    "cantons": ["lu", "ur", "nw", "ow"],
+    "title": "LUKS-Einzugsgebiet",
+    "client": { "short": "LUKS", "name": "Luzerner Kantonsspital" }
+  },
+  "so": {
+    "cantons": ["so"],
+    "client": { "short": "soH", "name": "Solothurner Spitäler" }
+  }
+}

@@ -1,0 +1,37 @@
+name: Update Gemeindegrenzen
+
+on:
+  schedule:
+    # Jährlich am 15. Februar (swisstopo publiziert den neuen Stand nach den Fusionen per 1.1.)
+    - cron: '0 6 15 2 *'
+  workflow_dispatch: # Erlaubt manuelles Auslösen
+
+jobs:
+  update-gemeinden:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Gemeindegrenzen aus swissBOUNDARIES3D erzeugen
+        run: python3 scripts/build_gemeinden.py
+
+      - name: Commit and Push
+        run: |
+          if git diff --quiet -- reports/gemeinden; then
+            echo "ℹ️ Gemeindegrenzen unverändert"
+            exit 0
+          fi
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git add reports/gemeinden
+          git commit -m "🗺️ Gemeindegrenzen aktualisiert: $(date +%Y-%m-%d)"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
