@@ -136,3 +136,16 @@ footer { background: var(--green-dark); color: var(--white); padding: 3.5rem 24p
   .header-right .partner-lbl { display: none; }
   .header-right .partner img { height: 20px; }
 }
+
+/* Kantonswappen im Kopfbereich der Reports */
+.hero-head { display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
+.wappen { display: flex; gap: .75rem; flex-shrink: 0; }
+.wappen:empty { display: none; }
+.wappen img { height: 96px; width: auto; display: block; filter: drop-shadow(0 4px 12px rgba(0,0,0,.25)); }
+.wappen.many img { height: 56px; }
+@media (min-width: 721px) { .hero h1 span { white-space: nowrap; } }
+@media (max-width: 720px) {
+  .hero-head { flex-direction: column-reverse; align-items: flex-start; gap: 1rem; }
+  .wappen img { height: 56px; }
+  .wappen.many img { height: 40px; }
+}

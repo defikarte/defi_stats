@@ -24,7 +24,7 @@ function withDefaults(id, c) {
 }
 
 async function getJson(url, label) {
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: 'no-cache' });   // immer beim Server nachfragen (304, wenn unverändert)
   if (!res.ok) throw new Error(`${label}: HTTP ${res.status}`);
   return res.json();
 }
@@ -78,6 +78,8 @@ function renderHeader() {
   }
   $('title').innerHTML = `Defibrillatoren ${preposition} <span></span>`;
   $('title').querySelector('span').textContent = title;
+  $('wappen').classList.toggle('many', cantons.length > 1);
+  $('wappen').innerHTML = cantons.map(k => `<img src="../img/wappen/${k}.png" alt="Wappen Kanton ${KANTONE[k]}" title="${KANTONE[k]}">`).join('');
   if (multi) $('subtitle').textContent = `Kantone ${cantons.map(k => KANTONE[k]).join(' · ')} · Auswertung pro Gemeinde · Daten aus OpenStreetMap`;
   $('source').textContent = 'Datenquelle: defikarte/defi_data · ' + cantons.map(k => `defis_kt_${k}.geojson`).join(' · ');
   $('year').textContent = new Date().getFullYear();
