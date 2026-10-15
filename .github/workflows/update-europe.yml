@@ -9,7 +9,7 @@ on:
 jobs:
   update-europe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout Repository
@@ -18,57 +18,54 @@ jobs:
       - name: Fetch Nachbarländer via Overpass
         run: |
           TODAY=$(date +%Y-%m-%d)
-
+          UA="defikarte-stats/1.0 (+https://stats.defikarte.ch)"
           ENDPOINTS=(
-            "https://overpass.private.coffee/api/interpreter"
             "https://overpass-api.de/api/interpreter"
+            "https://overpass.private.coffee/api/interpreter"
             "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
           )
 
+          # Zählt Defis eines Landes; mehrere Runden mit wachsender Pause, weil die
+          # öffentlichen Server oft ausgelastet sind (grosse Länder wie FR/IT zuerst betroffen)
           fetch_country() {
-            local ISO=$1
-            local QUERY="[out:json][timeout:60];(area[\"ISO3166-1\"=\"${ISO}\"];area[\"ISO3166-1:alpha2\"=\"${ISO}\"];)->.a;node[\"emergency\"=\"defibrillator\"](area.a);out count;"
-            for EP in "${ENDPOINTS[@]}"; do
-              echo "  Trying ${EP} for ${ISO}..." >&2
-              RESULT=$(curl -s --max-time 75 -X POST "$EP" \
-                --data-urlencode "data=${QUERY}" 2>/dev/null)
-              COUNT=$(echo "$RESULT" | jq -r '.elements[0].tags.total // empty' 2>/dev/null)
-              if [ ! -z "$COUNT" ] && [ "$COUNT" -ge 0 ]; then
-                echo "$COUNT"
-                return
-              fi
+            local ISO=$1 WAIT=30
+            local QUERY="[out:json][timeout:180];area[\"ISO3166-1\"=\"${ISO}\"][admin_level=2]->.a;node[\"emergency\"=\"defibrillator\"](area.a);out count;"
+            for ROUND in 1 2 3 4; do
+              for EP in "${ENDPOINTS[@]}"; do
+                echo "  ${ISO}: Runde ${ROUND}, ${EP}" >&2
+                COUNT=$(curl -s --max-time 200 -A "$UA" -H "Accept: application/json" -X POST "$EP" \
+                  --data-urlencode "data=${QUERY}" | jq -r '.elements[0].tags.total // empty' 2>/dev/null)
+                if [ -n "$COUNT" ] && [ "$COUNT" -gt 0 ]; then echo "$COUNT"; return; fi
+              done
+              sleep $WAIT; WAIT=$((WAIT * 2))
             done
-            echo "0"
           }
 
-          echo "Fetching CH..."
-          CH=$(fetch_country "CH")
-          echo "  CH: $CH"
+          # Fehlt ein Land, bleibt der letzte gültige Wert stehen (mit Datum in "carried_over")
+          cp europe-data.json previous.json
+          echo "{\"updated\": \"$TODAY\", \"countries\": {}, \"carried_over\": {}}" > europe-data.json
+          OK=0
+          for ISO in CH DE AT FR IT LI; do
+            COUNT=$(fetch_country "$ISO")
+            if [ -n "$COUNT" ]; then
+              echo "  ${ISO}: ${COUNT}"
+              jq --arg k "$ISO" --argjson n "$COUNT" '.countries[$k] = $n' europe-data.json > tmp.json
+              OK=$((OK + 1))
+            else
+              PREV=$(jq -r --arg k "$ISO" '.countries[$k] // 0' previous.json)
+              SINCE=$(jq -r --arg k "$ISO" '.carried_over[$k] // .updated' previous.json)
+              echo "⚠️ ${ISO}: keine Antwort, behalte ${PREV} (Stand ${SINCE})"
+              jq --arg k "$ISO" --argjson n "$PREV" --arg d "$SINCE" '.countries[$k] = $n | .carried_over[$k] = $d' europe-data.json > tmp.json
+            fi
+            mv tmp.json europe-data.json
+          done
+          rm previous.json
 
-          echo "Fetching DE..."
-          DE=$(fetch_country "DE")
-          echo "  DE: $DE"
-
-          echo "Fetching AT..."
-          AT=$(fetch_country "AT")
-          echo "  AT: $AT"
-
-          echo "Fetching FR..."
-          FR=$(fetch_country "FR")
-          echo "  FR: $FR"
-
-          echo "Fetching IT..."
-          IT=$(fetch_country "IT")
-          echo "  IT: $IT"
-
-          echo "Fetching LI..."
-          LI=$(fetch_country "LI")
-          echo "  LI: $LI"
-
-          # Schreibe europe-data.json
-          printf '{\n  "updated": "%s",\n  "countries": {\n    "CH": %s,\n    "DE": %s,\n    "AT": %s,\n    "FR": %s,\n    "IT": %s,\n    "LI": %s\n  }\n}\n' \
-            "$TODAY" "$CH" "$DE" "$AT" "$FR" "$IT" "$LI" > europe-data.json
-
+          if [ "$OK" -eq 0 ]; then
+            echo "❌ Kein Land abrufbar – Overpass nicht erreichbar, nichts gespeichert"
+            git checkout europe-data.json
+            exit 1
+          fi
           echo "✅ europe-data.json geschrieben:"
           cat europe-data.json
 

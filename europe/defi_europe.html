@@ -415,7 +415,11 @@ async function loadData() {
       const j = await r.json();
       if (j.countries && Object.values(j.countries).some(v => v > 0)) {
         COUNTRIES.forEach(c => { defiData[c.iso] = j.countries[c.iso] || 0; });
-        document.getElementById('fts').textContent = j.updated || '—';
+        // Länder, die beim letzten Abruf nicht erreichbar waren, behalten einen älteren Stand
+        const older = Object.entries(j.carried_over || {}).map(([iso, d]) =>
+          `${COUNTRIES.find(c => c.iso === iso)?.name || iso}: ${new Date(d).toLocaleDateString('de-CH')}`);
+        document.getElementById('fts').textContent = new Date(j.updated).toLocaleDateString('de-CH')
+          + (older.length ? ` (älterer Stand – ${older.join(', ')})` : '');
         loaded = true;
         pfill.style.width = '100%';
         ptxt.textContent = 'Daten geladen';

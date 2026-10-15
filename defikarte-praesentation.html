@@ -2,664 +2,359 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>defi_data & Stats Dashboard – Projektpräsentation</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>defikarte.ch – Projektpräsentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Design wie stats.defikarte.ch (assets/brand.css) */
   :root {
-    --g: #97C568;
-    --d: #144430;
-    --d2: #1e6644;
-    --bg: #f4f6f2;
-    --white: #fff;
-    --muted: rgba(255,255,255,.55);
+    --green-dark: #154430; --green-mid: #30805D; --green-soft: #659552; --green-light: #98C867;
+    --green-tint: #EEF5E6; --cream: #F7F6F3; --white: #fff; --line: #E9E7E1;
+    --text: #154430; --text-sub: rgba(21,68,48,.65);
+    --gradient: linear-gradient(135deg, var(--green-dark) 0%, var(--green-soft) 100%);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-family: 'Poppins', sans-serif; background: #111; color: var(--white); scroll-behavior: smooth; }
+  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; background: var(--green-dark); }
+  body { font-family: 'Poppins', sans-serif; color: var(--text); }
 
-  /* ── SLIDES ── */
-  .slide {
-    width: 100vw; min-height: 100vh;
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 64px 80px;
-    position: relative; overflow: hidden;
+  .slide { min-height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; padding: 72px 80px; position: relative; }
+  .slide-inner { max-width: 1120px; width: 100%; margin: 0 auto; }
+  .hero  { background: var(--gradient); color: var(--white); }
+  .dark  { background: var(--green-dark); color: var(--white); }
+  .light { background: var(--cream); }
+
+  .logo { width: 220px; height: 40px; display: block; margin-bottom: 3rem; }
+  .eyebrow { font-size: 15px; font-weight: 500; color: var(--green-light); margin-bottom: .75rem; }
+  .light .eyebrow { color: var(--green-mid); }
+  h1 { font-size: clamp(2.6rem, 5.5vw, 4.25rem); font-weight: 500; line-height: 1.15; }
+  h2 { font-size: clamp(2rem, 3.6vw, 2.9rem); font-weight: 500; line-height: 1.2; margin-bottom: 1rem; }
+  h3 { font-size: 1.15rem; font-weight: 500; margin-bottom: .4rem; }
+  h1 span, h2 span { color: var(--green-light); }
+  .light h2 span { color: var(--green-mid); }
+  .lead { font-size: 1.2rem; font-weight: 300; line-height: 1.6; max-width: 720px; opacity: .9; }
+  p { font-weight: 300; line-height: 1.6; }
+  .note { font-size: 13px; font-weight: 300; opacity: .7; margin-top: 1.25rem; }
+
+  /* Kacheln */
+  .grid { display: grid; gap: 16px; margin-top: 2.5rem; }
+  .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: var(--white); border-radius: 12px; padding: 1.5rem; }
+  .card p { color: var(--text-sub); font-size: 15px; }
+  .glass { background: rgba(255,255,255,.1); border-radius: 12px; padding: 1.5rem; }
+  .glass p { font-size: 15px; opacity: .85; }
+  .kpi-val { font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 500; line-height: 1.1; }
+  .kpi-lbl { font-size: 14px; font-weight: 300; opacity: .85; margin-top: .35rem; }
+  .glass .kpi-val { color: var(--white); } .glass.accent .kpi-val { color: var(--green-light); }
+  .card .kpi-val { color: var(--green-mid); }
+  .icon { width: 26px; height: 26px; color: var(--green-mid); margin-bottom: .9rem; }
+  .glass .icon, .dark .icon { color: var(--green-light); }
+
+  /* Ablauf */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 2.5rem; counter-reset: step; }
+  .flow .card { position: relative; }
+  .flow .card::before { counter-increment: step; content: counter(step); position: absolute; top: 1.25rem; right: 1.25rem; width: 28px; height: 28px; border-radius: 50%; background: var(--green-tint); color: var(--green-mid); font-size: 14px; font-weight: 500; display: grid; place-items: center; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 500; padding: .25rem .8rem; border-radius: 40px; background: var(--green-tint); color: var(--green-mid); margin: .2rem .25rem 0 0; }
+  .glass .pill, .dark .pill { background: rgba(255,255,255,.14); color: var(--white); }
+
+  /* Diagramme */
+  .chart-card { background: rgba(255,255,255,.06); border-radius: 12px; padding: 1rem; margin-top: 2rem; }
+  #growth-chart { width: 100%; height: 300px; display: block; }
+  .bars { margin-top: 2rem; display: grid; gap: 12px; }
+  .bar-row { display: grid; grid-template-columns: 170px 1fr 90px; align-items: center; gap: 1rem; font-size: 16px; }
+  .bar-bg { height: 14px; background: rgba(255,255,255,.1); border-radius: 7px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 7px; background: rgba(255,255,255,.45); }
+  .bar-row.ch .bar-fill { background: var(--green-light); }
+  .bar-row.ch { font-weight: 500; }
+  .bar-val { text-align: right; font-weight: 500; }
+
+  /* Reports */
+  .wappen-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 1.5rem; }
+  .wappen-row img { height: 56px; width: auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,.25)); }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 14px; background: rgba(255,255,255,.12); border-radius: 6px; padding: .1rem .4rem; }
+  .light code { background: var(--green-tint); }
+  .codebox { font-family: ui-monospace, Menlo, monospace; font-size: 15px; background: rgba(0,0,0,.25); border-radius: 12px; padding: 1.25rem 1.5rem; margin-top: 1rem; line-height: 1.7; white-space: pre; overflow-x: auto; }
+
+  /* Tabelle Workflows */
+  table { width: 100%; border-collapse: collapse; margin-top: 2rem; background: var(--white); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: .9rem 1.25rem; border-bottom: 1px solid var(--line); font-size: 15px; }
+  th { font-weight: 500; color: var(--text-sub); font-size: 13px; }
+  td { font-weight: 300; } td:first-child { font-weight: 500; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 2.5rem; }
+  .links a { color: var(--white); text-decoration: none; background: rgba(255,255,255,.12); border-radius: 40px; padding: .7rem 1.4rem; font-weight: 500; }
+  .links a.primary { background: linear-gradient(to right, var(--green-mid), var(--green-light)); }
+
+  /* Navigation */
+  .nav { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+  .nav button { width: 10px; height: 10px; border-radius: 50%; border: none; background: rgba(255,255,255,.35); cursor: pointer; padding: 0; transition: transform .2s, background .2s; }
+  .nav button.active { background: var(--green-light); transform: scale(1.4); }
+  .nav.on-light button { background: rgba(21,68,48,.25); } .nav.on-light button.active { background: var(--green-mid); }
+  .counter { position: fixed; right: 24px; bottom: 20px; font-size: 13px; font-weight: 500; color: var(--white); background: rgba(0,0,0,.25); border-radius: 40px; padding: .3rem .8rem; z-index: 10; }
+
+  @media (max-width: 900px) {
+    .slide { padding: 56px 24px; }
+    .g3, .g4, .flow { grid-template-columns: repeat(2, 1fr); }
+    .bar-row { grid-template-columns: 120px 1fr 70px; font-size: 14px; }
+    .nav { display: none; }
   }
-  .slide-dark  { background: var(--d); }
-  .slide-dark2 { background: linear-gradient(135deg, var(--d) 0%, var(--d2) 100%); }
-  .slide-light { background: var(--bg); color: #1a2e1a; }
-  .slide-black { background: #0d1a0d; }
-
-  /* Deko-Kreise */
-  .slide::before { content:''; position:absolute; width:400px; height:400px; border-radius:50%;
-    background: rgba(151,197,104,.08); top:-80px; right:-80px; pointer-events:none; }
-  .slide::after  { content:''; position:absolute; width:250px; height:250px; border-radius:50%;
-    background: rgba(151,197,104,.05); bottom:-60px; left:20%; pointer-events:none; }
-
-  .slide-inner { max-width: 1100px; margin: 0 auto; width: 100%; position: relative; z-index: 1; }
-
-  /* ── TYPO ── */
-  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 2px; color: var(--g);
-    text-transform: uppercase; margin-bottom: 16px; }
-  .slide-light .eyebrow { color: var(--d); }
-
-  h1 { font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800; line-height: 1.05; }
-  h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700; line-height: 1.2; margin-bottom: 24px; }
-  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
-  .lead { font-size: 1.1rem; font-weight: 300; color: var(--muted); margin-top: 16px; max-width: 600px; line-height: 1.7; }
-  .slide-light .lead { color: #4a6040; }
-
-  .accent { color: var(--g); }
-
-  /* ── NAV ── */
-  nav {
-    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 8px; z-index: 100; background: rgba(0,0,0,.5);
-    backdrop-filter: blur(8px); border-radius: 32px; padding: 8px 16px;
-  }
-  nav button {
-    width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer;
-    background: rgba(255,255,255,.3); transition: all .25s;
-  }
-  nav button.active { background: var(--g); width: 24px; border-radius: 4px; }
-
-  .slide-num {
-    position: fixed; top: 24px; right: 32px; font-size: 12px;
-    color: rgba(255,255,255,.3); z-index: 100; font-weight: 600;
-  }
-
-  /* ── PILL STATS ── */
-  .stats-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 40px; }
-  .stat-pill {
-    background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.15);
-    border-radius: 14px; padding: 20px 28px; backdrop-filter: blur(4px);
-    transition: background .2s; min-width: 160px;
-  }
-  .stat-pill:hover { background: rgba(255,255,255,.14); }
-  .stat-pill .val { font-size: 2.2rem; font-weight: 700; color: var(--g); line-height: 1; }
-  .stat-pill .lbl { font-size: .72rem; color: var(--muted); margin-top: 6px; }
-  .slide-light .stat-pill { background: rgba(20,68,48,.07); border-color: rgba(20,68,48,.15); }
-  .slide-light .stat-pill .lbl { color: #7a9a6a; }
-  .slide-light .stat-pill .val { color: var(--d); }
-
-  /* ── TWO COL ── */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-  .two-col-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
-
-  /* ── FEATURE CARDS ── */
-  .feature-card {
-    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-    border-radius: 16px; padding: 28px; transition: transform .2s, background .2s;
-  }
-  .feature-card:hover { transform: translateY(-4px); background: rgba(255,255,255,.11); }
-  .feature-card .icon { font-size: 2rem; margin-bottom: 14px; }
-  .feature-card p { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-top: 6px; }
-  .slide-light .feature-card {
-    background: var(--white); border-color: rgba(20,68,48,.12);
-    box-shadow: 0 2px 12px rgba(20,68,48,.08);
-  }
-  .slide-light .feature-card p { color: #5a7a5a; }
-  .slide-light .feature-card h3 { color: var(--d); }
-
-  /* ── COMPARISON BAR ── */
-  .cmp-table { display: flex; flex-direction: column; gap: 14px; }
-  .cmp-row { display: grid; grid-template-columns: 120px 1fr 90px; gap: 12px; align-items: center; font-size: .88rem; }
-  .cmp-bar-bg { height: 10px; background: rgba(255,255,255,.1); border-radius: 5px; overflow: hidden; }
-  .cmp-bar { height: 100%; border-radius: 5px; background: var(--g); transition: width 1s ease; }
-  .cmp-bar.ch { background: var(--g); }
-  .cmp-val { font-weight: 700; color: var(--g); text-align: right; }
-  .cmp-flag { font-size: 1.2rem; }
-
-  /* ── TIMELINE ── */
-  .timeline { position: relative; padding-left: 32px; }
-  .timeline::before { content:''; position:absolute; left:8px; top:8px; bottom:8px;
-    width: 2px; background: rgba(151,197,104,.3); }
-  .tl-item { position: relative; margin-bottom: 28px; }
-  .tl-item::before { content:''; position:absolute; left:-28px; top:4px; width:12px; height:12px;
-    border-radius:50%; background: var(--g); border: 2px solid var(--d); }
-  .tl-date { font-size: .75rem; color: var(--g); font-weight: 600; margin-bottom: 4px; }
-  .tl-item p { font-size: .88rem; color: var(--muted); }
-
-  /* ── CANVAS CHART ── */
-  canvas { border-radius: 12px; width: 100%; max-height: 260px; }
-
-  /* ── LOGO ── */
-  .logo-wrap { margin-bottom: 40px; }
-  .logo-wrap svg { height: 36px; width: auto; }
-
-  /* ── KEYBOARD HINT ── */
-  .kbd-hint { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
-    font-size: 11px; color: rgba(255,255,255,.2); z-index: 100; }
-
-  /* ── DIVIDER ── */
-  .divider { width: 48px; height: 3px; background: var(--g); border-radius: 2px; margin: 20px 0; }
-
-  @media(max-width: 768px) {
-    .slide { padding: 40px 24px; }
-    .two-col, .two-col-3 { grid-template-columns: 1fr; }
-    .stats-row { gap: 12px; }
-  }
+  @media (max-width: 560px) { .g2, .g3, .g4, .flow { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-<span class="slide-num" id="slide-num">1 / 8</span>
-<nav id="nav-dots"></nav>
-<div class="kbd-hint">← → oder Klick zum Navigieren</div>
+<nav class="nav" id="nav"></nav>
+<div class="counter" id="counter">1 / 9</div>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 1 – TITEL
-══════════════════════════════════════════════ -->
-<section class="slide slide-dark2" id="s1">
-<div class="slide-inner">
-  <div class="logo-wrap"><svg height="32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 255.12 46.19" style="enable-background:new 0 0 255.12 46.19;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#FFFFFF;}
-	.st1{fill:#97C568;}
-</style>
-<g id="HG"><rect width="255.12" height="46.19" fill="#144430"/></g>
-<g id="Logo">
-	<g>
-		<g>
-			<g>
-				<path class="st0" d="M61.24,19.94c0.72-1.4,1.71-2.48,2.97-3.24c1.25-0.76,2.65-1.13,4.18-1.13c1.17,0,2.28,0.25,3.34,0.76
-					c1.06,0.51,1.9,1.18,2.53,2.03V9.83h4.6v23.99h-4.6v-2.66c-0.56,0.89-1.35,1.6-2.37,2.14c-1.02,0.54-2.19,0.81-3.53,0.81
-					c-1.51,0-2.9-0.39-4.15-1.17c-1.25-0.78-2.24-1.87-2.97-3.29c-0.72-1.41-1.09-3.04-1.09-4.88
-					C60.16,22.96,60.52,21.35,61.24,19.94z M73.64,22c-0.43-0.79-1.02-1.39-1.75-1.82c-0.74-0.42-1.52-0.63-2.37-0.63
-					c-0.84,0-1.62,0.21-2.33,0.62c-0.71,0.41-1.29,1.01-1.73,1.8c-0.44,0.79-0.66,1.72-0.66,2.8c0,1.08,0.22,2.03,0.66,2.84
-					c0.44,0.81,1.03,1.43,1.75,1.86c0.72,0.43,1.5,0.65,2.32,0.65c0.84,0,1.63-0.21,2.37-0.63c0.73-0.42,1.32-1.03,1.75-1.81
-					c0.43-0.79,0.65-1.73,0.65-2.84S74.07,22.79,73.64,22z"/>
-				<path class="st0" d="M99.86,26.2H86.73c0.11,1.3,0.56,2.31,1.36,3.05c0.8,0.74,1.78,1.1,2.95,1.1c1.69,0,2.88-0.72,3.6-2.17
-					h4.89c-0.52,1.73-1.51,3.15-2.98,4.26c-1.47,1.11-3.27,1.67-5.41,1.67c-1.73,0-3.28-0.38-4.65-1.15
-					c-1.37-0.77-2.44-1.85-3.21-3.26c-0.77-1.4-1.15-3.03-1.15-4.86c0-1.86,0.38-3.49,1.13-4.89c0.76-1.4,1.81-2.48,3.18-3.24
-					c1.36-0.76,2.93-1.13,4.7-1.13c1.71,0,3.24,0.37,4.59,1.1c1.35,0.74,2.4,1.78,3.14,3.13s1.12,2.9,1.12,4.65
-					C99.99,25.09,99.95,25.68,99.86,26.2z M95.29,23.15c-0.02-1.17-0.44-2.1-1.26-2.8c-0.82-0.7-1.83-1.05-3.01-1.05
-					c-1.12,0-2.07,0.34-2.84,1.02c-0.77,0.68-1.24,1.63-1.41,2.84H95.29z"/>
-				<path class="st0" d="M111.53,19.58h-3.14v14.23h-4.6V19.58h-2.04v-3.73h2.04v-0.91c0-2.2,0.63-3.82,1.88-4.86
-					c1.25-1.04,3.14-1.52,5.67-1.46v3.82c-1.1-0.02-1.87,0.16-2.3,0.55c-0.43,0.39-0.65,1.09-0.65,2.11v0.75h3.14V19.58z"/>
-				<path class="st0" d="M114.79,12.96c-0.53-0.51-0.79-1.14-0.79-1.9c0-0.76,0.26-1.39,0.79-1.9c0.53-0.51,1.19-0.76,1.99-0.76
-					c0.8,0,1.46,0.25,1.99,0.76c0.53,0.51,0.79,1.14,0.79,1.9c0,0.76-0.27,1.39-0.79,1.9c-0.53,0.51-1.19,0.76-1.99,0.76
-					C115.98,13.72,115.32,13.46,114.79,12.96z M119.02,15.86v17.96h-4.54V15.86H119.02z"/>
-				<path class="st0" d="M134.12,33.81l-6.09-7.65v7.65h-4.54V9.83h4.54v13.65l6.03-7.62h5.9l-7.91,9.01l7.97,8.95H134.12z"/>
-				<path class="st0" d="M141.85,19.94c0.72-1.4,1.71-2.48,2.95-3.24c1.24-0.76,2.63-1.13,4.17-1.13c1.34,0,2.51,0.27,3.52,0.81
-					c1,0.54,1.81,1.22,2.41,2.04v-2.56h4.57v17.96h-4.57v-2.63c-0.58,0.84-1.39,1.54-2.41,2.09c-1.03,0.55-2.21,0.83-3.55,0.83
-					c-1.51,0-2.89-0.39-4.13-1.17c-1.24-0.78-2.23-1.87-2.95-3.29c-0.72-1.41-1.09-3.04-1.09-4.88
-					C140.77,22.96,141.13,21.35,141.85,19.94z M154.25,22c-0.43-0.79-1.02-1.39-1.75-1.82c-0.74-0.42-1.52-0.63-2.37-0.63
-					c-0.84,0-1.62,0.21-2.33,0.62c-0.71,0.41-1.29,1.01-1.73,1.8c-0.44,0.79-0.66,1.72-0.66,2.8c0,1.08,0.22,2.03,0.66,2.84
-					c0.44,0.81,1.03,1.43,1.75,1.86c0.72,0.43,1.5,0.65,2.32,0.65c0.84,0,1.63-0.21,2.37-0.63c0.73-0.42,1.32-1.03,1.75-1.81
-					c0.43-0.79,0.65-1.73,0.65-2.84S154.68,22.79,154.25,22z"/>
-				<path class="st0" d="M170.73,16.41c0.94-0.54,2.01-0.81,3.23-0.81v4.76h-1.2c-1.43,0-2.5,0.34-3.23,1
-					c-0.72,0.67-1.09,1.84-1.09,3.5v8.95h-4.54V15.86h4.54v2.79C169.03,17.69,169.79,16.95,170.73,16.41z"/>
-				<path class="st0" d="M182.94,19.58v8.69c0,0.61,0.15,1.04,0.44,1.31c0.29,0.27,0.78,0.4,1.48,0.4h2.11v3.83h-2.85
-					c-3.82,0-5.74-1.86-5.74-5.58v-8.65h-2.14v-3.73h2.14v-4.44h4.57v4.44h4.02v3.73H182.94z"/>
-				<path class="st0" d="M206.79,26.2h-13.13c0.11,1.3,0.56,2.31,1.36,3.05c0.8,0.74,1.78,1.1,2.95,1.1c1.69,0,2.88-0.72,3.6-2.17
-					h4.89c-0.52,1.73-1.51,3.15-2.98,4.26c-1.47,1.11-3.27,1.67-5.41,1.67c-1.73,0-3.28-0.38-4.65-1.15
-					c-1.37-0.77-2.44-1.85-3.21-3.26c-0.77-1.4-1.15-3.03-1.15-4.86c0-1.86,0.38-3.49,1.13-4.89c0.76-1.4,1.82-2.48,3.18-3.24
-					c1.36-0.76,2.93-1.13,4.7-1.13c1.71,0,3.24,0.37,4.59,1.1c1.35,0.74,2.4,1.78,3.14,3.13c0.75,1.35,1.12,2.9,1.12,4.65
-					C206.92,25.09,206.88,25.68,206.79,26.2z M202.22,23.15c-0.02-1.17-0.44-2.1-1.26-2.8c-0.82-0.7-1.83-1.05-3.01-1.05
-					c-1.12,0-2.07,0.34-2.84,1.02c-0.77,0.68-1.24,1.63-1.41,2.84H202.22z"/>
-				<path class="st0" d="M210.21,33.28c-0.53-0.51-0.79-1.14-0.79-1.9c0-0.76,0.26-1.39,0.79-1.9c0.53-0.51,1.2-0.76,2.03-0.76
-					c0.8,0,1.46,0.25,1.98,0.76c0.52,0.51,0.78,1.14,0.78,1.9c0,0.76-0.26,1.39-0.78,1.9c-0.52,0.51-1.18,0.76-1.98,0.76
-					C211.41,34.04,210.74,33.79,210.21,33.28z"/>
-				<path class="st0" d="M218.62,19.96c0.76-1.39,1.8-2.47,3.14-3.24c1.34-0.77,2.87-1.15,4.6-1.15c2.23,0,4.07,0.56,5.53,1.67
-					c1.46,1.11,2.44,2.67,2.93,4.68h-4.89c-0.26-0.78-0.7-1.39-1.31-1.83c-0.62-0.44-1.38-0.66-2.28-0.66
-					c-1.3,0-2.32,0.47-3.08,1.41c-0.76,0.94-1.13,2.27-1.13,4c0,1.71,0.38,3.03,1.13,3.97c0.76,0.94,1.78,1.41,3.08,1.41
-					c1.84,0,3.04-0.82,3.6-2.46h4.89c-0.5,1.95-1.48,3.49-2.95,4.64c-1.47,1.14-3.31,1.72-5.51,1.72c-1.73,0-3.26-0.38-4.6-1.15
-					c-1.34-0.77-2.39-1.85-3.14-3.24c-0.76-1.39-1.13-3.02-1.13-4.88S217.87,21.35,218.62,19.96z"/>
-				<path class="st0" d="M251.75,16.49c1.06,0.6,1.89,1.47,2.48,2.63c0.59,1.16,0.89,2.54,0.89,4.16v10.54h-4.54V23.9
-					c0-1.43-0.36-2.52-1.07-3.29c-0.71-0.77-1.69-1.15-2.92-1.15c-1.25,0-2.24,0.38-2.97,1.15c-0.72,0.77-1.09,1.86-1.09,3.29v9.92
-					H238V9.83h4.54v8.27c0.58-0.78,1.36-1.39,2.33-1.83c0.97-0.44,2.05-0.66,3.24-0.66C249.48,15.6,250.69,15.89,251.75,16.49z"/>
-			</g>
-		</g>
-		<path class="st1" d="M48.16,30.6l-7.95,0l6.09-6.1c3.51-3.64,5.17-9.09,3.3-14.84c-1.33-4.07-4.38-7.27-8.41-8.72
-			c-6.35-2.28-12.3-0.24-16,3.87c-3.7-4.11-9.66-6.16-16-3.87C5.16,2.4,2.11,5.6,0.78,9.67c-1.87,5.75-0.22,11.2,3.29,14.84
-			L17.46,37.9c0.26,0.26,0.68,0.26,0.94,0l3.61-3.61c0.26-0.26,0.26-0.68,0-0.94l-7.99-7.99l0.01-0.01L8.57,19.9
-			c-2.2-2.2-2.99-5.54-1.76-8.4c2.43-5.62,9.17-6.52,12.98-2.71l4.92,4.92c0.27,0.27,0.7,0.27,0.96,0l4.98-4.98
-			c2.2-2.2,5.54-2.99,8.4-1.76c5.61,2.43,6.52,9.17,2.7,12.98l-5.4,5.4l0.01,0.01l-7.53,7.53c-0.34,0.34-0.1,0.92,0.38,0.92l9.66,0
-			L28.3,45.38c-0.39,0.43,0.18,1.05,0.64,0.71l19.51-14.64c0.11-0.07,0.17-0.21,0.17-0.36C48.63,30.82,48.43,30.6,48.16,30.6z"/>
-	</g>
-</g>
-</svg></div>
-  <div class="eyebrow">Vereinspräsentation · September 2026</div>
-  <h1>Defis in der Schweiz<br><span class="accent">— und wir zählen sie.</span></h1>
-  <p class="lead">Ein Blick auf das defi_data-Projekt: wie wir Daten erfassen, aufbereiten und mit dem Stats-Dashboard sichtbar machen.</p>
-  <div class="stats-row" style="margin-top:48px;">
-    <div class="stat-pill"><div class="val">17'154</div><div class="lbl">Defis in der Schweiz</div></div>
-    <div class="stat-pill"><div class="val">193.9</div><div class="lbl">pro 100k Einwohner</div></div>
-    <div class="stat-pill"><div class="val">6 Jahre</div><div class="lbl">Datenwachstum</div></div>
-    <div class="stat-pill"><div class="val">100%</div><div class="lbl">Open Source & Open Data</div></div>
+<!-- 1 · Titel -->
+<section class="slide hero">
+  <div class="slide-inner">
+    <img class="logo" src="img/logo.svg" alt="defikarte.ch">
+    <div class="eyebrow" id="stand">Vereinspräsentation</div>
+    <h1>Defis in der Schweiz –<br><span>und wir zählen sie.</span></h1>
+    <p class="lead" style="margin-top:1.25rem">Wie die Defibrillatoren auf defikarte.ch erfasst, gezählt und für Kantone und Partner aufbereitet werden.</p>
+    <div class="grid g4">
+      <div class="glass accent"><div class="kpi-val" data-k="total">17'353</div><div class="kpi-lbl">Defibrillatoren erfasst</div></div>
+      <div class="glass"><div class="kpi-val" data-k="h24">7'199</div><div class="kpi-lbl">rund um die Uhr erreichbar</div><div class="kpi-lbl" style="opacity:.65"><span data-k="h24pct">41 %</span> aller Defis</div></div>
+      <div class="glass"><div class="kpi-val" data-k="growth">+1'769</div><div class="kpi-lbl">neu in 12 Monaten</div></div>
+      <div class="glass"><div class="kpi-val" data-k="density">19,2</div><div class="kpi-lbl">pro 10'000 Einwohner</div></div>
+    </div>
   </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 2 – WOHER KOMMEN DIE DATEN?
-══════════════════════════════════════════════ -->
-<section class="slide slide-black" id="s2">
-<div class="slide-inner">
-  <div class="eyebrow">Datenherkunft</div>
-  <h2>OpenStreetMap als <span class="accent">Fundament</span></h2>
-  <div class="two-col" style="margin-top:36px; gap:60px;">
-    <div>
-      <div class="timeline">
-        <div class="tl-item">
-          <div class="tl-date">Community</div>
-          <h3>Freiwillige erfassen Defis</h3>
-          <p>Mapper weltweit tragen Defibrillatoren in OSM ein – mit Standort, Öffnungszeiten, Betreiber und mehr.</p>
-        </div>
-        <div class="tl-item">
-          <div class="tl-date">defi_data Repository</div>
-          <h3>Gefilterte GeoJSON-Dateien</h3>
-          <p>Das Repo <code>OpenBracketsCH/defi_data</code> stellt pro Kanton eine saubere GeoJSON-Datei bereit.</p>
-        </div>
-        <div class="tl-item">
-          <div class="tl-date">jsDelivr CDN</div>
-          <h3>Schnelle Auslieferung</h3>
-          <p>Alle Dateien sind via CDN weltweit verfügbar – CORS-sicher, gecacht, sofort ladbar.</p>
-        </div>
-        <div class="tl-item">
-          <div class="tl-date">GitHub Actions</div>
-          <h3>Monatlich automatisiert</h3>
-          <p>Am 1. jeden Monats werden neue Zahlen gezählt, gespeichert und via FTP deployed.</p>
-        </div>
-      </div>
+<!-- 2 · Datenherkunft -->
+<section class="slide light">
+  <div class="slide-inner">
+    <div class="eyebrow">Datenherkunft</div>
+    <h2>OpenStreetMap als <span>Fundament</span></h2>
+    <p class="lead">Alle Daten sind offen – von der Erfassung bis zur Auswertung.</p>
+    <div class="flow">
+      <div class="card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><h3>Community</h3><p>Freiwillige erfassen Defis auf defikarte.ch oder direkt in OpenStreetMap.</p></div>
+      <div class="card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>defi_data</h3><p>Pro Kanton eine GeoJSON-Datei, laufend aus OpenStreetMap aktualisiert.</p></div>
+      <div class="card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><h3>Monatlich gezählt</h3><p>GitHub Actions hält Gesamtzahl und Zahlen pro Kanton jeden Monat fest.</p></div>
+      <div class="card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><h3>stats.defikarte.ch</h3><p>Statistik-Seite und Kantons-Reports – automatisch veröffentlicht.</p></div>
     </div>
-    <div>
-      <div class="feature-card" style="margin-bottom:16px;">
-        <div class="icon">📍</div>
-        <h3>~17'000 Standorte</h3>
-        <p>Alle in der Schweiz erfassten Defibrillatoren – mit Koordinaten, Namen, Zugang und mehr.</p>
-      </div>
-      <div class="feature-card" style="margin-bottom:16px;">
-        <div class="icon">🔄</div>
-        <h3>Live-Daten</h3>
-        <p>Die Community aktualisiert laufend – neue Geräte, korrigierte Öffnungszeiten, bessere Tags.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🌐</div>
-        <h3>ODbL-Lizenz</h3>
-        <p>Offene Datenbank-Lizenz – frei nutzbar, auch kommerziell, solange Änderungen geteilt werden.</p>
-      </div>
+    <div class="grid g3">
+      <div class="card"><h3>Offene Lizenz</h3><p>OpenStreetMap-Daten stehen unter der ODbL – frei nutzbar, auch für Kantone und Partner.</p></div>
+      <div class="card"><h3>Amtliche Grenzen</h3><p>Gemeindegrenzen und Einwohnerzahlen kommen von swisstopo und werden jährlich aktualisiert.</p></div>
+      <div class="card"><h3>Immer aktuell</h3><p>Seiten und Reports laden die Daten live – jede Korrektur in OSM ist sofort sichtbar.</p></div>
     </div>
   </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 3 – WACHSTUM
-══════════════════════════════════════════════ -->
-<section class="slide slide-dark" id="s3">
-<div class="slide-inner">
-  <div class="eyebrow">Wachstum 2024 – 2026</div>
-  <h2>+<span class="accent">2'000+</span> Defis in 24 Monaten</h2>
-  <p class="lead" style="margin-bottom:32px;">Die Community wächst stetig – jeden Monat kommen neue Standorte hinzu.</p>
-  <canvas id="growthChart"></canvas>
-  <div class="stats-row" style="margin-top:28px;">
-    <div class="stat-pill"><div class="val">+179</div><div class="lbl">Wachstum Mai 2026</div></div>
-    <div class="stat-pill"><div class="val">16'532</div><div class="lbl">Defis Mai 2026</div></div>
-    <div class="stat-pill"><div class="val">61</div><div class="lbl">Datenpunkte seit 2020</div></div>
+<!-- 3 · Wachstum -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="eyebrow">Wachstum</div>
+    <h2><span data-k="growth">+1'769</span> Defis in 12 Monaten</h2>
+    <p class="lead">Die Zahl der erfassten Defibrillatoren wächst stetig – Monat für Monat.</p>
+    <div class="grid g3">
+      <div class="glass"><div class="kpi-val" data-k="perMonth">Ø 147</div><div class="kpi-lbl">neue Defis pro Monat</div></div>
+      <div class="glass"><div class="kpi-val" data-k="growthPct">+11 %</div><div class="kpi-lbl">Wachstum in 12 Monaten</div></div>
+      <div class="glass"><div class="kpi-val" data-k="factor">7,9×</div><div class="kpi-lbl">so viele wie im <span data-k="since">März 2020</span></div></div>
+    </div>
+    <div class="chart-card"><canvas id="growth-chart"></canvas></div>
   </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 4 – LÄNDERVERGLEICH
-══════════════════════════════════════════════ -->
-<section class="slide slide-black" id="s4">
-<div class="slide-inner">
-  <div class="eyebrow">Internationaler Vergleich</div>
-  <h2>Die Schweiz im <span class="accent">europäischen Spitzenfeld</span></h2>
-  <div class="two-col" style="margin-top:36px;">
-    <div>
-      <p style="color:var(--muted); font-size:.9rem; margin-bottom:28px; line-height:1.7;">
-        Pro 100'000 Einwohner hat die Schweiz fast <strong style="color:var(--g);">8× mehr</strong> erfasste Defis als Deutschland. Nur Liechtenstein – mit seiner kleinen Fläche – liegt höher.
-      </p>
-      <div class="cmp-table">
-        <div class="cmp-row"><span><span class="cmp-flag">🇨🇭</span> Schweiz</span><div class="cmp-bar-bg"><div class="cmp-bar ch" style="width:34%"></div></div><span class="cmp-val">193.9</span></div>
-        <div class="cmp-row"><span><span class="cmp-flag">🇦🇹</span> Österreich</span><div class="cmp-bar-bg"><div class="cmp-bar" style="width:7%"></div></div><span class="cmp-val">20.2</span></div>
-        <div class="cmp-row"><span><span class="cmp-flag">🇩🇪</span> Deutschland</span><div class="cmp-bar-bg"><div class="cmp-bar" style="width:6%"></div></div><span class="cmp-val">23.7</span></div>
-        <div class="cmp-row"><span><span class="cmp-flag">🇫🇷</span> Frankreich</span><div class="cmp-bar-bg"><div class="cmp-bar" style="width:7%"></div></div><span class="cmp-val">41.0</span></div>
-        <div class="cmp-row"><span><span class="cmp-flag">🇮🇹</span> Italien</span><div class="cmp-bar-bg"><div class="cmp-bar" style="width:5%"></div></div><span class="cmp-val">13.1</span></div>
-        <div class="cmp-row"><span><span class="cmp-flag">🇱🇮</span> Liechtenstein</span><div class="cmp-bar-bg"><div class="cmp-bar" style="width:100%"></div></div><span class="cmp-val">566.7</span></div>
-      </div>
-      <p style="font-size:.72rem; color:rgba(255,255,255,.3); margin-top:16px;">Quelle: OpenStreetMap via Overpass API · September 2026 · Einheit: Defis pro 100k Einwohner</p>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:20px;">
-      <div class="stat-pill"><div class="val">17'154</div><div class="lbl">🇨🇭 Schweiz (absolut)</div></div>
-      <div class="stat-pill"><div class="val">28'020</div><div class="lbl">🇫🇷 Frankreich (absolut)</div></div>
-      <div class="stat-pill"><div class="val">20'028</div><div class="lbl">🇩🇪 Deutschland (absolut)</div></div>
-      <div class="stat-pill" style="border-color:rgba(151,197,104,.4);">
-        <div class="val" style="font-size:1.3rem;">Aber relativ…</div>
-        <div class="lbl">…führt die CH klar. 8× besser erfasst als DE.</div>
-      </div>
-    </div>
+<!-- 4 · Europa -->
+<section class="slide hero">
+  <div class="slide-inner">
+    <div class="eyebrow">Internationaler Vergleich</div>
+    <h2>Die Schweiz im <span>europäischen Spitzenfeld</span></h2>
+    <p class="lead">Erfasste Defibrillatoren pro 100'000 Einwohner in OpenStreetMap.</p>
+    <div class="bars" id="bars"></div>
+    <p class="note" id="bars-note">Quelle: OpenStreetMap via Overpass API</p>
   </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 5 – KANTONS-REPORTS
-══════════════════════════════════════════════ -->
-<section class="slide slide-light" id="s5">
-<div class="slide-inner">
-  <div class="eyebrow" style="color:var(--d);">Stats Dashboard</div>
-  <h2 style="color:var(--d);">10 Kantons-Reports –<br><span class="accent">ein einheitliches System</span></h2>
-  <div class="two-col-3" style="margin-top:36px;">
-    <div class="feature-card">
-      <div class="icon">🗺️</div>
-      <h3>Interaktive Karte</h3>
-      <p>GeoJSON-basierte Karte mit allen Standorten, Gemeinde-Einfärbung und Klick-Details.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">📊</div>
-      <h3>Sortierbare Tabelle</h3>
-      <p>Alle Gemeinden nach Anzahl Defis, 24/7-Anteil, Betreiber sortierbar.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">📥</div>
-      <h3>CSV & PDF Export</h3>
-      <p>Daten direkt exportieren – mit UTF-8 BOM für Excel-Kompatibilität.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🔍</div>
-      <h3>Suche & Filter</h3>
-      <p>Live-Suche über alle Standorte, Gemeinden und Betreiber.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🕐</div>
-      <h3>24/7 Statistiken</h3>
-      <p>Anteil rund-um-die-Uhr verfügbarer Defis – pro Kanton und Gemeinde.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">📱</div>
-      <h3>Responsive</h3>
-      <p>Funktioniert auf Desktop, Tablet und Smartphone – ohne Installation.</p>
+<!-- 5 · Statistik-Seite -->
+<section class="slide light">
+  <div class="slide-inner">
+    <div class="eyebrow">stats.defikarte.ch</div>
+    <h2>Die Statistik-Seite: <span>auf einen Blick</span></h2>
+    <div class="grid g3">
+      <div class="card"><div class="kpi-val" data-k="total">17'353</div><h3>Gesamtzahl &amp; Wachstum</h3><p>Verlauf seit 2020, pro Kanton seit Oktober 2021 – Zeitraum und Kanton wählbar.</p></div>
+      <div class="card"><div class="kpi-val" data-k="h24pct">41 %</div><h3>Erreichbar 24/7</h3><p>Rund um die Uhr zugängliche Defis – schweizweit und für jeden Kanton.</p></div>
+      <div class="card"><div class="kpi-val" data-k="density">19,2</div><h3>Defis pro 10'000 Einwohner</h3><p>Macht Kantone vergleichbar – und zeigt, wo noch Defis fehlen.</p></div>
+      <div class="card"><div class="kpi-val" data-k="corePct">46 %</div><h3>Einsatztauglich erfasst</h3><p>Standort, Zugang, Öffnungszeiten und innen/aussen – alles, was im Notfall zählt.</p></div>
+      <div class="card"><div class="kpi-val" data-k="gapCount">5'373</div><h3>Was am meisten fehlt</h3><p><span data-k="gapLabel">Öffnungszeiten</span> fehlen am häufigsten – konkrete Ansatzpunkte für die Community.</p></div>
+      <div class="card"><div class="kpi-val">1080²</div><h3>Social-Media-Grafiken</h3><p>Fertige Grafiken für die Schweiz oder jeden Kanton – unter <code>?tools</code>.</p></div>
     </div>
   </div>
-  <div style="margin-top:32px; display:flex; gap:12px; flex-wrap:wrap;">
-    <span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">BE</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">ZH</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">BS/BL</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">LU/UR/NW/OW</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">SO</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">GE</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">NE</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">JU</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">VD</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">TI</span><span style="background:rgba(20,68,48,.1); border:1px solid rgba(20,68,48,.2); border-radius:20px; padding:4px 14px; font-size:.8rem; color:var(--d);">(mehr geplant)</span>
-  </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 6 – TECHNOLOGIE
-══════════════════════════════════════════════ -->
-<section class="slide slide-dark2" id="s6">
-<div class="slide-inner">
-  <div class="eyebrow">Technologie</div>
-  <h2>Einfach, schnell,<br><span class="accent">wartungsarm</span></h2>
-  <div class="two-col" style="margin-top:36px; align-items:start;">
-    <div style="display:flex; flex-direction:column; gap:16px;">
-      <div class="feature-card">
-        <div class="icon">📄</div>
-        <h3>Vanilla HTML/JS/CSS</h3>
-        <p>Kein Framework, kein Build-Prozess. Eine Datei öffnen = fertig.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🤖</div>
-        <h3>GitHub Actions</h3>
-        <p>Zwei Workflows: CH-Kantone (09:00) & Nachbarländer (10:00) — am 1. jeden Monats vollautomatisch.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🌐</div>
-        <h3>jsDelivr CDN</h3>
-        <p>GeoJSON-Dateien per CDN geladen – CORS-sicher, weltweit schnell, kein eigener Server nötig.</p>
-      </div>
+<!-- 6 · Kantons-Reports -->
+<section class="slide hero">
+  <div class="slide-inner">
+    <div class="eyebrow">Dienstleistung</div>
+    <h2><span data-k="reportCount">9</span> Kantons-Reports – <span>eine Vorlage</span></h2>
+    <p class="lead">Jeder Report zeigt alle Defis pro Gemeinde, mit PDF- und CSV-Export – für Kantone, Spitäler und Partner.</p>
+    <div class="wappen-row" id="wappen-row"></div>
+    <div class="grid g4">
+      <div class="glass"><h3>Genaue Gemeinden</h3><p>Zuordnung per GPS mit den amtlichen Gemeindegrenzen von swisstopo.</p></div>
+      <div class="glass"><h3>Deutsch &amp; Französisch</h3><p>Romandie automatisch auf Französisch, zweisprachige Kantone mit Umschalter.</p></div>
+      <div class="glass"><h3>Kunden &amp; Partner</h3><p>Report für ein Spital, Logo eines Vertriebspartners – auch im PDF.</p></div>
+      <div class="glass"><h3>Neuer Kunde in Minuten</h3><p>Eine Zeile Konfiguration, und der Report ist online.</p></div>
     </div>
-    <div>
-      <div class="divider"></div>
-      <div style="font-size:.85rem; line-height:2; color:var(--muted);">
-        <div style="margin-bottom:20px;">
-          <div style="color:var(--g); font-weight:600; margin-bottom:6px;">Datenpipeline</div>
-          <div>OSM → defi_data Repo → jsDelivr CDN</div>
-          <div>→ GitHub Actions → historical-data.json</div>
-          <div>→ FTP → Webserver</div>
-        </div>
-        <div style="margin-bottom:20px;">
-          <div style="color:var(--g); font-weight:600; margin-bottom:6px;">Länder-Pipeline</div>
-          <div>OSM Overpass API → GitHub Actions</div>
-          <div>→ europe-data.json → FTP → Webserver</div>
-        </div>
-        <div>
-          <div style="color:var(--g); font-weight:600; margin-bottom:6px;">Dateien im Repo</div>
-          <div>historical-data.json</div>
-          <div>europe-data.json</div>
-          <div>11× HTML-Berichte</div>
-        </div>
-      </div>
-    </div>
+    <div class="codebox">"gr": { "cantons": ["gr"] }   →   stats.defikarte.ch/gr/</div>
   </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 7 – NÄCHSTE SCHRITTE
-══════════════════════════════════════════════ -->
-<section class="slide slide-black" id="s7">
-<div class="slide-inner">
-  <div class="eyebrow">Ausblick</div>
-  <h2>Was als nächstes<br><span class="accent">kommt</span></h2>
-  <div class="two-col-3" style="margin-top:40px;">
-    <div class="feature-card">
-      <div class="icon">🗺️</div>
-      <h3>Weitere Kantone</h3>
-      <p>Fehlende Kantone sollen ebenfalls eigene Reports erhalten – gleiche Vorlage, neue Daten.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">📈</div>
-      <h3>Mehr Länder</h3>
-      <p>Europa-Seite auf weitere Länder ausweiten sobald die Datenlage stabil ist.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🔔</div>
-      <h3>Alerts & Monitoring</h3>
-      <p>Automatische Benachrichtigung wenn Datenqualität sinkt oder Defis verschwinden.</p>
-    </div>
+<!-- 7 · Technik -->
+<section class="slide light">
+  <div class="slide-inner">
+    <div class="eyebrow">Technik</div>
+    <h2>Einfach, offen, <span>wartungsarm</span></h2>
+    <p class="lead">Reines HTML, CSS und JavaScript – kein Framework, kein Server, kein Build-Schritt. Alles läuft über GitHub.</p>
+    <table>
+      <thead><tr><th>Automatisch</th><th>Wann</th><th>Was</th></tr></thead>
+      <tbody>
+        <tr><td>Statistik-Update</td><td>1. jedes Monats</td><td>Zählt alle 26 Kantone und schreibt die Zahlen in die Historie</td></tr>
+        <tr><td>Europa-Update</td><td>1. jedes Monats</td><td>Fragt die Zahlen der Nachbarländer bei OpenStreetMap ab</td></tr>
+        <tr><td>Gemeindegrenzen</td><td>jährlich im Februar</td><td>Übernimmt Gemeindefusionen und neue Einwohnerzahlen von swisstopo</td></tr>
+        <tr><td>Deploy</td><td>bei jeder Änderung</td><td>Veröffentlicht Statistik-Seite und Reports auf stats.defikarte.ch</td></tr>
+      </tbody>
+    </table>
   </div>
-  <div style="margin-top:48px; padding: 28px; background:rgba(151,197,104,.08); border:1px solid rgba(151,197,104,.2); border-radius:16px;">
-    <h3 style="color:var(--g); margin-bottom:12px;">💡 Wie kann ich helfen?</h3>
-    <p style="color:var(--muted); font-size:.9rem; line-height:1.8;">
-      Defis in OpenStreetMap eintragen · Öffnungszeiten vervollständigen · Betreiber ergänzen · Fehler melden · Code beitragen
-    </p>
-  </div>
-</div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     SLIDE 8 – ABSCHLUSS
-══════════════════════════════════════════════ -->
-<section class="slide slide-dark2" id="s8">
-<div class="slide-inner" style="text-align:center; max-width:700px;">
-  <div class="logo-wrap" style="display:flex; justify-content:center;"><svg height="32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 255.12 46.19" style="enable-background:new 0 0 255.12 46.19;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#FFFFFF;}
-	.st1{fill:#97C568;}
-</style>
-<g id="HG"><rect width="255.12" height="46.19" fill="#144430"/></g>
-<g id="Logo">
-	<g>
-		<g>
-			<g>
-				<path class="st0" d="M61.24,19.94c0.72-1.4,1.71-2.48,2.97-3.24c1.25-0.76,2.65-1.13,4.18-1.13c1.17,0,2.28,0.25,3.34,0.76
-					c1.06,0.51,1.9,1.18,2.53,2.03V9.83h4.6v23.99h-4.6v-2.66c-0.56,0.89-1.35,1.6-2.37,2.14c-1.02,0.54-2.19,0.81-3.53,0.81
-					c-1.51,0-2.9-0.39-4.15-1.17c-1.25-0.78-2.24-1.87-2.97-3.29c-0.72-1.41-1.09-3.04-1.09-4.88
-					C60.16,22.96,60.52,21.35,61.24,19.94z M73.64,22c-0.43-0.79-1.02-1.39-1.75-1.82c-0.74-0.42-1.52-0.63-2.37-0.63
-					c-0.84,0-1.62,0.21-2.33,0.62c-0.71,0.41-1.29,1.01-1.73,1.8c-0.44,0.79-0.66,1.72-0.66,2.8c0,1.08,0.22,2.03,0.66,2.84
-					c0.44,0.81,1.03,1.43,1.75,1.86c0.72,0.43,1.5,0.65,2.32,0.65c0.84,0,1.63-0.21,2.37-0.63c0.73-0.42,1.32-1.03,1.75-1.81
-					c0.43-0.79,0.65-1.73,0.65-2.84S74.07,22.79,73.64,22z"/>
-				<path class="st0" d="M99.86,26.2H86.73c0.11,1.3,0.56,2.31,1.36,3.05c0.8,0.74,1.78,1.1,2.95,1.1c1.69,0,2.88-0.72,3.6-2.17
-					h4.89c-0.52,1.73-1.51,3.15-2.98,4.26c-1.47,1.11-3.27,1.67-5.41,1.67c-1.73,0-3.28-0.38-4.65-1.15
-					c-1.37-0.77-2.44-1.85-3.21-3.26c-0.77-1.4-1.15-3.03-1.15-4.86c0-1.86,0.38-3.49,1.13-4.89c0.76-1.4,1.81-2.48,3.18-3.24
-					c1.36-0.76,2.93-1.13,4.7-1.13c1.71,0,3.24,0.37,4.59,1.1c1.35,0.74,2.4,1.78,3.14,3.13s1.12,2.9,1.12,4.65
-					C99.99,25.09,99.95,25.68,99.86,26.2z M95.29,23.15c-0.02-1.17-0.44-2.1-1.26-2.8c-0.82-0.7-1.83-1.05-3.01-1.05
-					c-1.12,0-2.07,0.34-2.84,1.02c-0.77,0.68-1.24,1.63-1.41,2.84H95.29z"/>
-				<path class="st0" d="M111.53,19.58h-3.14v14.23h-4.6V19.58h-2.04v-3.73h2.04v-0.91c0-2.2,0.63-3.82,1.88-4.86
-					c1.25-1.04,3.14-1.52,5.67-1.46v3.82c-1.1-0.02-1.87,0.16-2.3,0.55c-0.43,0.39-0.65,1.09-0.65,2.11v0.75h3.14V19.58z"/>
-				<path class="st0" d="M114.79,12.96c-0.53-0.51-0.79-1.14-0.79-1.9c0-0.76,0.26-1.39,0.79-1.9c0.53-0.51,1.19-0.76,1.99-0.76
-					c0.8,0,1.46,0.25,1.99,0.76c0.53,0.51,0.79,1.14,0.79,1.9c0,0.76-0.27,1.39-0.79,1.9c-0.53,0.51-1.19,0.76-1.99,0.76
-					C115.98,13.72,115.32,13.46,114.79,12.96z M119.02,15.86v17.96h-4.54V15.86H119.02z"/>
-				<path class="st0" d="M134.12,33.81l-6.09-7.65v7.65h-4.54V9.83h4.54v13.65l6.03-7.62h5.9l-7.91,9.01l7.97,8.95H134.12z"/>
-				<path class="st0" d="M141.85,19.94c0.72-1.4,1.71-2.48,2.95-3.24c1.24-0.76,2.63-1.13,4.17-1.13c1.34,0,2.51,0.27,3.52,0.81
-					c1,0.54,1.81,1.22,2.41,2.04v-2.56h4.57v17.96h-4.57v-2.63c-0.58,0.84-1.39,1.54-2.41,2.09c-1.03,0.55-2.21,0.83-3.55,0.83
-					c-1.51,0-2.89-0.39-4.13-1.17c-1.24-0.78-2.23-1.87-2.95-3.29c-0.72-1.41-1.09-3.04-1.09-4.88
-					C140.77,22.96,141.13,21.35,141.85,19.94z M154.25,22c-0.43-0.79-1.02-1.39-1.75-1.82c-0.74-0.42-1.52-0.63-2.37-0.63
-					c-0.84,0-1.62,0.21-2.33,0.62c-0.71,0.41-1.29,1.01-1.73,1.8c-0.44,0.79-0.66,1.72-0.66,2.8c0,1.08,0.22,2.03,0.66,2.84
-					c0.44,0.81,1.03,1.43,1.75,1.86c0.72,0.43,1.5,0.65,2.32,0.65c0.84,0,1.63-0.21,2.37-0.63c0.73-0.42,1.32-1.03,1.75-1.81
-					c0.43-0.79,0.65-1.73,0.65-2.84S154.68,22.79,154.25,22z"/>
-				<path class="st0" d="M170.73,16.41c0.94-0.54,2.01-0.81,3.23-0.81v4.76h-1.2c-1.43,0-2.5,0.34-3.23,1
-					c-0.72,0.67-1.09,1.84-1.09,3.5v8.95h-4.54V15.86h4.54v2.79C169.03,17.69,169.79,16.95,170.73,16.41z"/>
-				<path class="st0" d="M182.94,19.58v8.69c0,0.61,0.15,1.04,0.44,1.31c0.29,0.27,0.78,0.4,1.48,0.4h2.11v3.83h-2.85
-					c-3.82,0-5.74-1.86-5.74-5.58v-8.65h-2.14v-3.73h2.14v-4.44h4.57v4.44h4.02v3.73H182.94z"/>
-				<path class="st0" d="M206.79,26.2h-13.13c0.11,1.3,0.56,2.31,1.36,3.05c0.8,0.74,1.78,1.1,2.95,1.1c1.69,0,2.88-0.72,3.6-2.17
-					h4.89c-0.52,1.73-1.51,3.15-2.98,4.26c-1.47,1.11-3.27,1.67-5.41,1.67c-1.73,0-3.28-0.38-4.65-1.15
-					c-1.37-0.77-2.44-1.85-3.21-3.26c-0.77-1.4-1.15-3.03-1.15-4.86c0-1.86,0.38-3.49,1.13-4.89c0.76-1.4,1.82-2.48,3.18-3.24
-					c1.36-0.76,2.93-1.13,4.7-1.13c1.71,0,3.24,0.37,4.59,1.1c1.35,0.74,2.4,1.78,3.14,3.13c0.75,1.35,1.12,2.9,1.12,4.65
-					C206.92,25.09,206.88,25.68,206.79,26.2z M202.22,23.15c-0.02-1.17-0.44-2.1-1.26-2.8c-0.82-0.7-1.83-1.05-3.01-1.05
-					c-1.12,0-2.07,0.34-2.84,1.02c-0.77,0.68-1.24,1.63-1.41,2.84H202.22z"/>
-				<path class="st0" d="M210.21,33.28c-0.53-0.51-0.79-1.14-0.79-1.9c0-0.76,0.26-1.39,0.79-1.9c0.53-0.51,1.2-0.76,2.03-0.76
-					c0.8,0,1.46,0.25,1.98,0.76c0.52,0.51,0.78,1.14,0.78,1.9c0,0.76-0.26,1.39-0.78,1.9c-0.52,0.51-1.18,0.76-1.98,0.76
-					C211.41,34.04,210.74,33.79,210.21,33.28z"/>
-				<path class="st0" d="M218.62,19.96c0.76-1.39,1.8-2.47,3.14-3.24c1.34-0.77,2.87-1.15,4.6-1.15c2.23,0,4.07,0.56,5.53,1.67
-					c1.46,1.11,2.44,2.67,2.93,4.68h-4.89c-0.26-0.78-0.7-1.39-1.31-1.83c-0.62-0.44-1.38-0.66-2.28-0.66
-					c-1.3,0-2.32,0.47-3.08,1.41c-0.76,0.94-1.13,2.27-1.13,4c0,1.71,0.38,3.03,1.13,3.97c0.76,0.94,1.78,1.41,3.08,1.41
-					c1.84,0,3.04-0.82,3.6-2.46h4.89c-0.5,1.95-1.48,3.49-2.95,4.64c-1.47,1.14-3.31,1.72-5.51,1.72c-1.73,0-3.26-0.38-4.6-1.15
-					c-1.34-0.77-2.39-1.85-3.14-3.24c-0.76-1.39-1.13-3.02-1.13-4.88S217.87,21.35,218.62,19.96z"/>
-				<path class="st0" d="M251.75,16.49c1.06,0.6,1.89,1.47,2.48,2.63c0.59,1.16,0.89,2.54,0.89,4.16v10.54h-4.54V23.9
-					c0-1.43-0.36-2.52-1.07-3.29c-0.71-0.77-1.69-1.15-2.92-1.15c-1.25,0-2.24,0.38-2.97,1.15c-0.72,0.77-1.09,1.86-1.09,3.29v9.92
-					H238V9.83h4.54v8.27c0.58-0.78,1.36-1.39,2.33-1.83c0.97-0.44,2.05-0.66,3.24-0.66C249.48,15.6,250.69,15.89,251.75,16.49z"/>
-			</g>
-		</g>
-		<path class="st1" d="M48.16,30.6l-7.95,0l6.09-6.1c3.51-3.64,5.17-9.09,3.3-14.84c-1.33-4.07-4.38-7.27-8.41-8.72
-			c-6.35-2.28-12.3-0.24-16,3.87c-3.7-4.11-9.66-6.16-16-3.87C5.16,2.4,2.11,5.6,0.78,9.67c-1.87,5.75-0.22,11.2,3.29,14.84
-			L17.46,37.9c0.26,0.26,0.68,0.26,0.94,0l3.61-3.61c0.26-0.26,0.26-0.68,0-0.94l-7.99-7.99l0.01-0.01L8.57,19.9
-			c-2.2-2.2-2.99-5.54-1.76-8.4c2.43-5.62,9.17-6.52,12.98-2.71l4.92,4.92c0.27,0.27,0.7,0.27,0.96,0l4.98-4.98
-			c2.2-2.2,5.54-2.99,8.4-1.76c5.61,2.43,6.52,9.17,2.7,12.98l-5.4,5.4l0.01,0.01l-7.53,7.53c-0.34,0.34-0.1,0.92,0.38,0.92l9.66,0
-			L28.3,45.38c-0.39,0.43,0.18,1.05,0.64,0.71l19.51-14.64c0.11-0.07,0.17-0.21,0.17-0.36C48.63,30.82,48.43,30.6,48.16,30.6z"/>
-	</g>
-</g>
-</svg></div>
-  <div class="divider" style="margin:28px auto;"></div>
-  <h1 style="font-size:clamp(2rem,4vw,3.2rem);">Danke fürs Zuhören</h1>
-  <p class="lead" style="margin: 24px auto; text-align:center;">
-    Fragen, Ideen, Feedback — jetzt oder später auf GitHub.
-  </p>
-  <div class="stats-row" style="justify-content:center; margin-top:40px;">
-    <div class="stat-pill" style="text-align:center;">
-      <div class="val">defikarte.ch</div>
-      <div class="lbl">Website</div>
+<!-- 8 · Ausblick -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="eyebrow">Ausblick</div>
+    <h2>Was als Nächstes <span>kommt</span></h2>
+    <div class="grid g3">
+      <div class="glass"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><h3>Schweizer Karte</h3><p>Kantone auf einer Karte eingefärbt nach Dichte, 24/7 oder Vollständigkeit.</p></div>
+      <div class="glass"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><h3>Weitere Kantone</h3><p>Neue Kunden und Partner – jeder Kanton ist technisch bereits vorbereitet.</p></div>
+      <div class="glass"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><h3>Mehr Sprachen</h3><p>Nach Deutsch und Französisch auch Italienisch fürs Tessin.</p></div>
     </div>
-    <div class="stat-pill" style="text-align:center;">
-      <div class="val" style="font-size:1.1rem;">OpenBracketsCH</div>
-      <div class="lbl">GitHub Organisation</div>
-    </div>
-    <div class="stat-pill" style="text-align:center;">
-      <div class="val">OSM</div>
-      <div class="lbl">Daten beitragen</div>
+    <div class="glass" style="margin-top:16px">
+      <h3>Wie kann ich helfen?</h3>
+      <p>Nur <strong data-k="corePct">46 %</strong> der Defis sind einsatztauglich erfasst. Jede ergänzte Angabe hilft im Notfall:</p>
+      <div style="margin-top:.75rem"><span class="pill">Defis erfassen</span><span class="pill">Öffnungszeiten ergänzen</span><span class="pill">Zugang angeben</span><span class="pill">Fehler melden</span><span class="pill">Code beitragen</span></div>
     </div>
   </div>
-</div>
 </section>
 
-<script>
-// ── SLIDES ──────────────────────────────────────
-const slides = Array.from(document.querySelectorAll('.slide'));
-const numEl  = document.getElementById('slide-num');
-const nav    = document.getElementById('nav-dots');
+<!-- 9 · Danke -->
+<section class="slide hero">
+  <div class="slide-inner" style="text-align:center">
+    <img class="logo" src="img/logo.svg" alt="defikarte.ch" style="margin:0 auto 3rem">
+    <h1>Danke fürs <span>Zuhören</span></h1>
+    <p class="lead" style="margin:1.25rem auto 0">Fragen, Ideen, Feedback – jetzt oder später.</p>
+    <div class="links">
+      <a class="primary" href="https://defikarte.ch" target="_blank">defikarte.ch</a>
+      <a href="https://stats.defikarte.ch" target="_blank">stats.defikarte.ch</a>
+      <a href="https://github.com/defikarte" target="_blank">GitHub</a>
+      <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+// ── Navigation: Pfeiltasten, Punkte, F für Vollbild ──────────────────────────
+const slides = [...document.querySelectorAll('.slide')];
+const nav = document.getElementById('nav'), counter = document.getElementById('counter');
 let cur = 0;
-
-slides.forEach((_, i) => {
-  const btn = document.createElement('button');
-  btn.onclick = () => goTo(i);
-  nav.appendChild(btn);
-});
-
-function goTo(i) {
-  cur = Math.max(0, Math.min(slides.length - 1, i));
-  slides[cur].scrollIntoView({ behavior: 'smooth' });
-  numEl.textContent = (cur + 1) + ' / ' + slides.length;
-  nav.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === cur));
+slides.forEach((_, i) => { const b = document.createElement('button'); b.ariaLabel = `Folie ${i + 1}`; b.onclick = () => go(i); nav.append(b); });
+function mark(i) {
+  cur = i;
+  counter.textContent = `${i + 1} / ${slides.length}`;
+  nav.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === i));
+  nav.classList.toggle('on-light', slides[i].classList.contains('light'));
 }
-
-// Scroll-Detection
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      cur = slides.indexOf(e.target);
-      numEl.textContent = (cur + 1) + ' / ' + slides.length;
-      nav.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === cur));
-    }
-  });
-}, { threshold: 0.5 });
-slides.forEach(s => obs.observe(s));
-
+const go = i => slides[Math.max(0, Math.min(slides.length - 1, i))].scrollIntoView({ behavior: 'smooth' });
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && mark(slides.indexOf(e.target))), { threshold: .55 });
+slides.forEach(s => io.observe(s));
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(cur + 1);
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(cur - 1);
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 });
 
-goTo(0);
+// ── Live-Daten (Fallback: Stand Oktober 2026) ────────────────────────────────
+const RAW = 'https://raw.githubusercontent.com/defikarte/';
+const KT = 'ag ai ar be bl bs fr ge gl gr ju lu ne nw ow sg sh so sz tg ti ur vd vs zg zh'.split(' ');
+const CORE = [['defibrillator:location', 'Standortangaben'], ['access', 'Zugangsangaben'], ['opening_hours', 'Öffnungszeiten'], ['indoor', 'Innen/Aussen-Angaben']];
+const COUNTRIES = [['CH', 'Schweiz', 8849], ['LI', 'Liechtenstein', 39], ['DE', 'Deutschland', 84607], ['AT', 'Österreich', 9120], ['FR', 'Frankreich', 68373], ['IT', 'Italien', 59240]];
+const fmt = n => Math.round(n).toLocaleString('de-CH');
+const has = (p, k) => p[k] !== undefined && p[k] !== null && String(p[k]).trim() !== '';
+const set = (k, v) => document.querySelectorAll(`[data-k="${k}"]`).forEach(el => el.textContent = v);
+const get = async url => { const r = await fetch(url, { cache: 'no-cache' }); if (!r.ok) throw new Error(url); return r.json(); };
 
-// ── CHART ───────────────────────────────────────
-const labels = ["2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05"];
-const values = [13290, 13445, 13565, 13706, 13811, 14022, 14203, 14380, 14540, 14693, 14829, 14956, 15087, 15204, 15325, 15442, 15584, 15718, 15824, 15849, 16047, 16169, 16353, 16532];
-
-const canvas = document.getElementById('growthChart');
-const ctx    = canvas.getContext('2d');
-canvas.width  = canvas.offsetWidth * devicePixelRatio;
-canvas.height = 260 * devicePixelRatio;
-ctx.scale(devicePixelRatio, devicePixelRatio);
-
-const W = canvas.offsetWidth, H = 260;
-const pad = { t: 20, r: 20, b: 40, l: 70 };
-const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
-const minV = Math.min(...values) - 200, maxV = Math.max(...values) + 200;
-
-function xp(i) { return pad.l + (i / (values.length - 1)) * cw; }
-function yp(v) { return pad.t + (1 - (v - minV) / (maxV - minV)) * ch; }
-
-// Grid
-ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-ctx.lineWidth = 1;
-for (let i = 0; i <= 4; i++) {
-  const y = pad.t + (i / 4) * ch;
-  ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-  const v = Math.round(maxV - (i / 4) * (maxV - minV));
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.font = '11px Poppins, sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText(v.toLocaleString('de-CH'), pad.l - 8, y + 4);
+let history = [];
+async function loadLive() {
+  const [hist, pop, reports, ...cantons] = await Promise.all([
+    get(RAW + 'defi_stats/main/historical-data.json'),
+    get(RAW + 'defi_stats/main/einwohner.json'),
+    get(RAW + 'defi_stats/main/reports/reports.json'),
+    ...KT.map(k => get(`${RAW}defi_data/main/data/json/defis_kt_${k}.geojson`)),
+  ]);
+  history = hist;
+  const feats = cantons.flatMap(c => c.features || []);
+  const total = feats.length, h24 = feats.filter(f => (f.properties.opening_hours || '').trim() === '24/7').length;
+  const core = feats.filter(f => CORE.every(([k]) => has(f.properties, k))).length;
+  const gaps = CORE.map(([k, l]) => [l, feats.filter(f => !has(f.properties, k)).length]).sort((a, b) => b[1] - a[1]);
+  const einw = Object.values(pop.einwohner).reduce((a, b) => a + b, 0);
+  const yearAgo = new Date(); yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+  const before = [...hist].reverse().find(e => e.date <= yearAgo.toISOString().slice(0, 10));
+  const g = total - before.count;
+  set('total', fmt(total)); set('h24', fmt(h24)); set('h24pct', Math.round(h24 / total * 100) + ' %');
+  set('growth', '+' + fmt(g)); set('growthPct', '+' + Math.round(g / before.count * 100) + ' %'); set('perMonth', 'Ø ' + fmt(g / 12));
+  set('density', (total / einw * 1e4).toFixed(1).replace('.', ','));
+  set('factor', (total / hist[0].count).toFixed(1).replace('.', ',') + '×');
+  set('since', new Date(hist[0].date).toLocaleDateString('de-CH', { month: 'long', year: 'numeric' }));
+  set('corePct', Math.round(core / total * 100) + ' %'); set('gapCount', fmt(gaps[0][1])); set('gapLabel', gaps[0][0]);
+  set('reportCount', Object.keys(reports).length);
+  wappen([...new Set(Object.values(reports).flatMap(r => r.cantons))]);
+  history.push({ date: new Date().toISOString().slice(0, 10), count: total, live: true });
 }
 
-// Gradient fill
-const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
-grad.addColorStop(0, 'rgba(151,197,104,0.25)');
-grad.addColorStop(1, 'rgba(151,197,104,0)');
-ctx.beginPath();
-ctx.moveTo(xp(0), yp(values[0]));
-values.forEach((v, i) => ctx.lineTo(xp(i), yp(v)));
-ctx.lineTo(xp(values.length - 1), pad.t + ch);
-ctx.lineTo(xp(0), pad.t + ch);
-ctx.closePath();
-ctx.fillStyle = grad;
-ctx.fill();
+function wappen(codes) {
+  document.getElementById('wappen-row').innerHTML = codes.map(k => `<img src="img/wappen/${k}.png" alt="${k.toUpperCase()}" title="${k.toUpperCase()}">`).join('');
+}
 
-// Linie
-ctx.beginPath();
-ctx.strokeStyle = '#97C568';
-ctx.lineWidth = 2.5;
-ctx.lineJoin = 'round';
-values.forEach((v, i) => i === 0 ? ctx.moveTo(xp(i), yp(v)) : ctx.lineTo(xp(i), yp(v)));
-ctx.stroke();
+async function loadEurope() {
+  const data = await get(RAW + 'defi_stats/main/europe-data.json').catch(() => ({ updated: '2026-10-01', countries: { CH: 17317, DE: 20601, AT: 1987, LI: 225 } }));
+  const rows = COUNTRIES.filter(([iso]) => data.countries[iso] > 0).map(([iso, name, pop]) => ({ iso, name, per: data.countries[iso] / pop * 100 }));
+  const max = Math.max(...rows.map(r => r.per));
+  document.getElementById('bars').innerHTML = rows.sort((a, b) => b.per - a.per).map(r =>
+    `<div class="bar-row${r.iso === 'CH' ? ' ch' : ''}"><span>${r.name}</span><div class="bar-bg"><div class="bar-fill" style="width:${r.per / max * 100}%"></div></div><span class="bar-val">${r.per.toFixed(1).replace('.', ',')}</span></div>`).join('');
+  const missing = COUNTRIES.filter(([iso]) => !(data.countries[iso] > 0)).map(c => c[1]);
+  document.getElementById('bars-note').textContent = `Quelle: OpenStreetMap via Overpass API · Stand ${new Date(data.updated).toLocaleDateString('de-CH')}` + (missing.length ? ` · ohne aktuelle Daten: ${missing.join(', ')}` : '');
+}
 
-// X-Labels (nur jeden 3.)
-ctx.fillStyle = 'rgba(255,255,255,0.35)';
-ctx.font = '10px Poppins, sans-serif';
-ctx.textAlign = 'center';
-labels.forEach((l, i) => {
-  if (i % 3 === 0) ctx.fillText(l, xp(i), H - 8);
-});
+// ── Wachstumskurve (letzte 24 Monate) ────────────────────────────────────────
+function drawChart() {
+  const c = document.getElementById('growth-chart'), ctx = c.getContext('2d'), dpr = devicePixelRatio || 1;
+  const { width: W, height: H } = c.getBoundingClientRect();
+  c.width = W * dpr; c.height = H * dpr; ctx.scale(dpr, dpr);
+  const cut = new Date(); cut.setFullYear(cut.getFullYear() - 2);
+  const data = history.filter(d => d.date >= cut.toISOString().slice(0, 10));
+  if (data.length < 2) return;
+  const pad = { t: 20, r: 24, b: 34, l: 64 }, cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const vals = data.map(d => d.count), min = Math.min(...vals) * .98, max = Math.max(...vals) * 1.01;
+  const t0 = new Date(data[0].date), t1 = new Date(data.at(-1).date);
+  const pts = data.map(d => ({ ...d, x: pad.l + (new Date(d.date) - t0) / (t1 - t0) * cw, y: pad.t + ch - (d.count - min) / (max - min) * ch }));
+  ctx.font = '300 13px Poppins, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  for (let i = 0; i <= 4; i++) { const y = pad.t + i / 4 * ch; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(fmt(max - i / 4 * (max - min)), pad.l - 10, y + 4); }
+  ctx.textAlign = 'center'; const seen = new Set();
+  for (const p of pts) { const y = p.date.slice(0, 4); if (!seen.has(y)) { seen.add(y); ctx.fillText(y, p.x, H - 8); } }
+  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch); grad.addColorStop(0, 'rgba(152,200,103,.35)'); grad.addColorStop(1, 'rgba(152,200,103,0)');
+  ctx.beginPath(); ctx.moveTo(pts[0].x, pad.t + ch); pts.forEach(p => ctx.lineTo(p.x, p.y)); ctx.lineTo(pts.at(-1).x, pad.t + ch); ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.strokeStyle = '#98C867'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
+  const last = pts.at(-1);
+  ctx.beginPath(); ctx.arc(last.x, last.y, 12, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(152,200,103,.3)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(last.x, last.y, 6, 0, 2 * Math.PI); ctx.fillStyle = '#98C867'; ctx.fill();
+}
+
+const FALLBACK_HISTORY = [['2024-10-01', 13811], ['2025-01-01', 14380], ['2025-04-01', 14829], ['2025-07-01', 15204], ['2025-10-01', 15584], ['2026-01-01', 15849], ['2026-04-01', 16353], ['2026-07-01', 16843], ['2026-10-01', 17309], ['2026-10-16', 17353]].map(([date, count]) => ({ date, count }));
+wappen(['zh', 'be', 'bs', 'bl', 'lu', 'ur', 'nw', 'ow', 'so', 'ge', 'ne', 'vd', 'ju']);
+document.getElementById('stand').textContent = 'Vereinspräsentation · ' + new Date().toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
+await Promise.all([loadLive().catch(() => { history = FALLBACK_HISTORY; }), loadEurope()]);
+drawChart();
+addEventListener('resize', drawChart);
 </script>
 </body>
 </html>

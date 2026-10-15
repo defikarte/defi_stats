@@ -1,5 +1,9 @@
 {
   "zh": { "cantons": ["zh"] },
+  "gr": { "cantons": ["gr"] },
+  "gl": { "cantons": ["gl"] },
+  "ai": { "cantons": ["ai"] },
+  "ar": { "cantons": ["ar"] },
   "be": {
     "cantons": ["be"],
     "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
