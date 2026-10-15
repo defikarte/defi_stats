@@ -1,0 +1,97 @@
+/* Statistik-Seite – ergänzt brand.css */
+
+/* Kennzahlen im Kopfbereich: Gesamtzahl gross, Rest als Kacheln */
+.kpi-main { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 12px; margin-top: 2rem; align-items: stretch; }
+.kpi-main .stats { margin-top: 0; grid-template-columns: repeat(2, 1fr); }
+.kpi-big { background: rgba(255,255,255,.18); border-radius: 12px; padding: 1.5rem 1.5rem 1.25rem; display: flex; flex-direction: column; justify-content: center; }
+.kpi-big-val { font-size: clamp(3rem, 7vw, 4.5rem); font-weight: 500; line-height: 1; color: var(--green-light); }
+.kpi-big-lbl { font-size: 15px; font-weight: 300; color: rgba(255,255,255,.85); margin-top: .5rem; }
+.kpi-delta { display: inline-block; align-self: flex-start; margin-top: 1rem; font-size: 14px; font-weight: 500; color: var(--green-dark); background: var(--green-light); border-radius: 40px; padding: .2rem .8rem; }
+.kpi-delta:empty { display: none; }
+.stat-sub { font-size: 12px; font-weight: 300; color: rgba(255,255,255,.7); margin-top: .15rem; }
+
+/* Abschnitte */
+.block { margin-bottom: 3.5rem; }
+.section-sub { font-size: 15px; font-weight: 300; color: var(--text-sub); margin-top: .25rem; }
+.card { background: var(--white); border-radius: 12px; }
+.group-title { font-size: 15px; font-weight: 500; margin: 1.5rem 0 .75rem; }
+.footnote { font-size: 13px; font-weight: 300; color: var(--text-sub); margin-top: .75rem; line-height: 1.5; }
+
+.loading-card { background: var(--white); border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 4rem 2rem; color: var(--text-sub); }
+.progress { width: 220px; height: 6px; background: var(--green-tint); border-radius: 3px; overflow: hidden; }
+.progress-bar { height: 100%; width: 0; background: var(--green-light); transition: width .2s; }
+
+/* Wachstum */
+.chart-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.chart-controls .tab-row { margin-bottom: 0; }
+.select { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text); background: var(--white); border: none; border-radius: 40px; padding: .6rem 2.25rem .6rem 1rem; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23154430' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+.growth-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+.tile { background: var(--white); border-radius: 12px; padding: 1.1rem 1.25rem; }
+.tile-val { font-size: 1.75rem; font-weight: 500; line-height: 1.2; }
+.tile-val.up { color: var(--green-mid); }
+.tile-lbl { font-size: 13px; font-weight: 300; color: var(--text-sub); margin-top: .25rem; }
+.chart-card { padding: 1rem .5rem .5rem; }
+#growth-chart { width: 100%; height: 340px; display: block; cursor: crosshair; }
+
+/* Kantonstabelle */
+.canton-table td { vertical-align: middle; }
+.canton-table tbody tr.row { cursor: pointer; }
+.canton-table tbody tr.row.open { background: var(--cream); }
+.kt-cell { display: flex; align-items: center; gap: .75rem; }
+.kt-cell img { width: 22px; height: 27px; object-fit: contain; flex-shrink: 0; }
+.kt-cell .arrow { margin-left: auto; color: var(--text-sub); font-size: 12px; transition: transform .2s; }
+tr.open .kt-cell .arrow { transform: rotate(180deg); }
+.num-sub { display: block; font-size: 12px; font-weight: 300; color: var(--text-sub); }
+.growth-pos { color: var(--green-mid); font-weight: 500; }
+.pill { display: inline-block; min-width: 3.25rem; text-align: center; font-size: 13px; font-weight: 500; padding: .2rem .6rem; border-radius: 40px; background: var(--cream); }
+.pill.above { background: var(--green-tint); color: var(--green-mid); }
+.pill.below { background: #F6EEDF; color: #8A5A14; }
+.gap-cell { font-size: 13px; text-align: left; white-space: nowrap; }
+.gap-cell strong { font-weight: 500; }
+tr.detail td { padding: 0 1.25rem 1.25rem; background: var(--cream); text-align: left; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .5rem 2rem; padding-top: .25rem; }
+.attr { display: grid; grid-template-columns: 1fr auto; gap: .25rem .75rem; align-items: center; font-size: 13px; }
+.attr-bar { grid-column: 1 / -1; height: 6px; background: var(--white); border-radius: 3px; overflow: hidden; }
+.attr-bar div { height: 100%; background: var(--green-light); border-radius: 3px; }
+.attr-bar.core div { background: var(--green-mid); }
+.attr-val { color: var(--text-sub); }
+
+/* Lücken */
+.gap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.gap-tile { background: var(--white); border-radius: 12px; padding: 1.1rem 1.25rem; }
+.gap-tile .gap-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .5rem; }
+.gap-tile .gap-label { font-size: 15px; font-weight: 500; }
+.gap-tile .gap-pct { font-size: 15px; color: var(--text-sub); }
+.gap-tile .attr-bar { margin: .6rem 0 .5rem; background: var(--green-tint); }
+.gap-tile .gap-missing { display: flex; justify-content: space-between; gap: .5rem; font-size: 13px; font-weight: 300; color: var(--text-sub); }
+.gap-tile .gap-missing strong { font-weight: 500; color: var(--text); }
+
+/* Aufruf (wie App-Bereich auf defikarte.ch) */
+.cta { background: var(--gradient-hero); color: var(--white); padding: 3.5rem 24px; }
+.cta-inner { max-width: 992px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+.cta h2 { font-size: 1.75rem; font-weight: 500; margin-bottom: .5rem; }
+.cta p { font-weight: 300; max-width: 560px; line-height: 1.6; color: rgba(255,255,255,.85); }
+.btn-lg { font-size: 16px; padding: 14px 24px; text-decoration: none; }
+
+/* Werkzeuge (?tools) */
+.tools-card { background: var(--white); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.tools-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.tools-controls .select { background-color: var(--cream); }
+#export-canvas { width: 100%; max-width: 540px; aspect-ratio: 1; border-radius: 12px; display: none; }
+#export-canvas.visible { display: block; }
+
+@media (max-width: 860px) {
+  .kpi-main { grid-template-columns: 1fr; }
+  .growth-tiles { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 720px) {
+  #growth-chart { height: 260px; }
+  .cta { padding: 2.5rem 16px; }
+  .hide-mobile { display: none; }
+}
+
+/* Icons */
+.stat-card.has-icon { position: relative; padding-right: 3rem; }
+.stat-card .icon { position: absolute; top: 1.1rem; right: 1.1rem; color: var(--green-light); }
+.gap-tile .gap-label { display: inline-flex; align-items: center; gap: .5rem; }
+.gap-tile .icon { color: var(--green-mid); flex-shrink: 0; }

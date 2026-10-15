@@ -23,51 +23,48 @@ jobs:
         run: |
           # Liste aller Schweizer Kantone
           CANTONS="ag ai ar be bl bs fr ge gl gr ju lu ne nw ow sg sh so sz tg ti ur vd vs zg zh"
-          
-          TOTAL=0
-          
+
+          echo '{}' > cantons.json
           for CANTON in $CANTONS; do
-            echo "Fetching ${CANTON}..."
-            URL="https://cdn.jsdelivr.net/gh/OpenBracketsCH/defi_data@main/data/json/defis_kt_${CANTON}.geojson"
-            
+            URL="https://raw.githubusercontent.com/defikarte/defi_data/main/data/json/defis_kt_${CANTON}.geojson"
+
             # Lade GeoJSON und zähle Features
-            COUNT=$(curl -s "$URL" | jq '.features | length')
-            
-            if [ ! -z "$COUNT" ] && [ "$COUNT" -gt 0 ]; then
-              echo "  ${CANTON}: ${COUNT} Defis"
-              TOTAL=$((TOTAL + COUNT))
-            else
-              echo "  ${CANTON}: Fehler beim Laden"
+            COUNT=$(curl -sf "$URL" | jq '.features | length')
+
+            # Fehlt ein Kanton, lieber abbrechen als ein zu tiefes Total speichern
+            if [ -z "$COUNT" ] || [ "$COUNT" -eq 0 ]; then
+              echo "❌ ${CANTON}: Fehler beim Laden"
+              exit 1
             fi
+            echo "  ${CANTON}: ${COUNT} Defis"
+            jq --arg k "$CANTON" --argjson n "$COUNT" '. + {($k): $n}' cantons.json > cantons.tmp && mv cantons.tmp cantons.json
           done
-          
+
+          TOTAL=$(jq '[.[]] | add' cantons.json)
           echo "TOTAL_DEFIS=$TOTAL" >> $GITHUB_ENV
           echo "Gesamtzahl: $TOTAL Defibrillatoren"
-      
+
       - name: Update JSON File
         run: |
           # Heutiges Datum (YYYY-MM-DD)
           TODAY=$(date +%Y-%m-%d)
-          
-          # Lese existierende Daten
-          HISTORICAL=$(cat historical-data.json)
-          
+
           # Prüfe ob heute schon existiert
-          EXISTS=$(echo "$HISTORICAL" | jq --arg date "$TODAY" '.[] | select(.date == $date) | .date')
-          
+          EXISTS=$(jq --arg date "$TODAY" '.[] | select(.date == $date) | .date' historical-data.json)
+
           if [ -z "$EXISTS" ]; then
-            # Füge neuen Eintrag hinzu
-            echo "$HISTORICAL" | jq --arg date "$TODAY" --argjson count "$TOTAL_DEFIS" \
-              '. += [{"date": $date, "count": $count}] | sort_by(.date)' \
-              > historical-data.json
-            
+            # Neuer Eintrag mit Schweizer Total und Zahlen pro Kanton
+            jq --arg date "$TODAY" --argjson count "$TOTAL_DEFIS" --slurpfile c cantons.json \
+              '. += [{"date": $date, "count": $count, "cantons": $c[0]}] | sort_by(.date)' \
+              historical-data.json > historical.tmp && mv historical.tmp historical-data.json
+
             echo "✅ Neuer Eintrag hinzugefügt: $TODAY → $TOTAL_DEFIS Defis"
             echo "UPDATE_MADE=true" >> $GITHUB_ENV
           else
             echo "ℹ️ Eintrag für $TODAY existiert bereits"
             echo "UPDATE_MADE=false" >> $GITHUB_ENV
           fi
-      
+
       - name: Commit and Push
         if: env.UPDATE_MADE == 'true'
         run: |

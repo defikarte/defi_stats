@@ -24,7 +24,7 @@ function displayNames(gemeinden) {
   for (const g of gemeinden) g.label = count[short(g)] > 1 ? g.name : short(g);
 }
 
-// gemeindeFiles: Inhalt von reports/gemeinden/<kt>.json für alle Kantone des Reports
+// gemeindeFiles: Inhalt von reports/kantone/<kt>.json für alle Kantone des Reports
 export function buildIndex(gemeindeFiles) {
   const gemeinden = gemeindeFiles.flatMap(f => f.gemeinden.map(g => ({ ...g, canton: f.canton })));
   displayNames(gemeinden);

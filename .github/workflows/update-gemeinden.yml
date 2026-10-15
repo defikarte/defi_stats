@@ -24,13 +24,13 @@ jobs:
 
       - name: Commit and Push
         run: |
-          if git diff --quiet -- reports/gemeinden; then
+          if git diff --quiet -- reports/kantone einwohner.json; then
             echo "ℹ️ Gemeindegrenzen unverändert"
             exit 0
           fi
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "GitHub Actions"
-          git add reports/gemeinden
+          git add reports/kantone einwohner.json
           git commit -m "🗺️ Gemeindegrenzen aktualisiert: $(date +%Y-%m-%d)"
           git push
         env:

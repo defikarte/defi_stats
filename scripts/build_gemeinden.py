@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Erzeugt reports/gemeinden/<kt>.json für alle 26 Kantone aus swissBOUNDARIES3D (swisstopo).
+"""Erzeugt reports/kantone/<kt>.json (Gemeindegrenzen pro Kanton) und einwohner.json aus swissBOUNDARIES3D (swisstopo).
 
     python3 scripts/build_gemeinden.py                  # neuester Stand
     python3 scripts/build_gemeinden.py --tolerance 20   # Vereinfachung in Metern (Standard 10)
@@ -11,7 +11,9 @@ import argparse, io, json, sqlite3, struct, tempfile, urllib.request, zipfile
 from pathlib import Path
 
 STAC = 'https://data.geo.admin.ch/api/stac/v0.9/collections/ch.swisstopo.swissboundaries3d/items?limit=100'
-OUT = Path(__file__).resolve().parent.parent / 'reports' / 'gemeinden'
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / 'reports' / 'kantone'
+EINWOHNER = ROOT / 'einwohner.json'
 KANTONE = 'zh be lu ur sz ow nw gl zg fr so bs bl sh ar ai sg gr ag tg ti vd vs ne ge ju'.split()  # BFS-Kantonsnummer 1–26
 
 
@@ -109,6 +111,8 @@ def main():
         db = sqlite3.connect(path)
         rows = db.execute("""select bfs_nummer, name, kantonsnummer, geom from tlm_hoheitsgebiet
                              where icc = 'CH' and objektart in ('Gemeindegebiet', 'Kommunanz')""").fetchall()
+        einwohner = db.execute("""select kantonsnummer, sum(einwohnerzahl) from tlm_kantonsgebiet
+                                  where icc = 'CH' group by kantonsnummer""").fetchall()
 
     per_canton = {}
     for bfs, name, ktnr, blob in rows:
@@ -121,6 +125,11 @@ def main():
         body = {'canton': kt, 'stand': stand, 'quelle': f'swisstopo swissBOUNDARIES3D ({stand}), vereinfacht {args.tolerance:g} m', 'gemeinden': lst}
         (args.out / f'{kt}.json').write_text(json.dumps(body, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         print(f'{kt}: {len(lst)} Gemeinden')
+
+    # Einwohner pro Kanton für die Statistik-Seite (Defis pro 10'000 Einwohner)
+    pop = {'stand': stand, 'quelle': 'swisstopo swissBOUNDARIES3D', 'einwohner': {KANTONE[nr - 1]: n for nr, n in sorted(einwohner)}}
+    EINWOHNER.write_text(json.dumps(pop, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print(f'Einwohner: {sum(pop["einwohner"].values()):,}')
 
 
 if __name__ == '__main__':

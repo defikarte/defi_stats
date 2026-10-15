@@ -1,7 +1,7 @@
 // Generischer Defi-Report: /<id>/ (beim Deploy erzeugt) oder /reports/?r=<id>, Konfiguration in reports.json
 import { KANTONE, DATA_BASE, buildIndex, assign, summarize, is24h } from './geo.js';
 
-const BADGE_COLORS = [['#e8f0ff', '#1a3a8a'], ['#fff0e0', '#8a3a00'], ['#ffeaea', '#8a1a1a'], ['#f0ffe8', '#1a6a1a'], ['#f3e8ff', '#5a1a8a'], ['#e8fbff', '#0a5a6a']];
+const BADGE_COLORS = [['#EEF5E6', '#30805D'], ['#E3EEF4', '#24576E'], ['#F6EEDF', '#8A5A14'], ['#F3E6E6', '#8A2E2E'], ['#ECE8F4', '#4F3B7A'], ['#E6F2EF', '#1F6656']];
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('de-CH');
 const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
@@ -43,7 +43,7 @@ async function loadData() {
 
     msg.textContent = `Lade ${cfg.multi ? cfg.cantons.length + ' Kantone' : 'Kanton ' + KANTONE[cfg.cantons[0]]} von GitHub…`;
     const [gemeinden, defis] = await Promise.all([
-      Promise.all(cfg.cantons.map(k => getJson(`gemeinden/${k}.json`, `Gemeinden ${k.toUpperCase()}`))),
+      Promise.all(cfg.cantons.map(k => getJson(`kantone/${k}.json`, `Gemeinden ${k.toUpperCase()}`))),
       Promise.all(cfg.cantons.map(k => getJson(`${DATA_BASE}defis_kt_${k}.geojson`, k.toUpperCase()))),
     ]);
 
@@ -66,16 +66,21 @@ async function loadData() {
 function renderHeader() {
   const { client, title, preposition, cantons, multi } = cfg;
   document.title = `Defibrillatoren ${title} — defikarte.ch`;
-  $('header-tag').textContent = `${client ? client.name : title} · Report`;
-  if (client) {
-    $('header-client').textContent = client.short;
-    $('eyebrow').textContent = `${client.short} — ${client.name}`;
-    $('header-client').hidden = $('eyebrow').hidden = false;
+  $('eyebrow').textContent = client ? `Report für ${client.name}` : 'Report';
+  if (cfg.partner) {
+    for (const el of [$('header-partner'), $('footer-partner')]) {
+      const img = el.querySelector('img');
+      img.src = cfg.partner.logo;
+      img.alt = cfg.partner.name;
+      if (cfg.partner.url) el.href = cfg.partner.url;
+      el.hidden = false;
+    }
   }
-  $('title').innerHTML = `Defibrillatoren ${preposition}<br><span></span>`;
+  $('title').innerHTML = `Defibrillatoren ${preposition} <span></span>`;
   $('title').querySelector('span').textContent = title;
-  if (multi) $('subtitle').textContent = `Kantone ${cantons.map(k => KANTONE[k]).join(' · ')} · Auswertung pro Gemeinde · OpenStreetMap`;
-  $('source').textContent = 'defikarte/defi_data · ' + cantons.map(k => `defis_kt_${k}.geojson`).join(' · ');
+  if (multi) $('subtitle').textContent = `Kantone ${cantons.map(k => KANTONE[k]).join(' · ')} · Auswertung pro Gemeinde · Daten aus OpenStreetMap`;
+  $('source').textContent = 'Datenquelle: defikarte/defi_data · ' + cantons.map(k => `defis_kt_${k}.geojson`).join(' · ');
+  $('year').textContent = new Date().getFullYear();
   const style = document.createElement('style');
   style.textContent = cantons.map((k, i) => { const [bg, fg] = BADGE_COLORS[i % BADGE_COLORS.length]; return `.kt-badge.${k}{background:${bg};color:${fg}}`; }).join('');
   document.head.append(style);
@@ -120,14 +125,14 @@ function render() {
 
   const showKt = cfg.multi && activeTab === 'all';
   const cols = [['rank', '#', 'left'], ['name', 'Gemeinde', 'left'], ...(showKt ? [['kt', 'Kt.', 'left']] : []), ['total', 'Total'], ['h24', '24/7'], ['pct', 'Anteil 24h']];
-  const icon = k => sortKey === k ? (sortDir === -1 ? '↓' : '↑') : '<span style="opacity:.3">↕</span>';
+  const icon = k => sortKey === k ? (sortDir === -1 ? '↓' : '↑') : '';
   const thead = `<thead><tr>${cols.map(([k, l, cls = '']) => `<th class="${cls}${sortKey === k ? ' sorted' : ''}" data-sort="${k}">${l} <span>${icon(k)}</span></th>`).join('')}</tr></thead>`;
   const tbody = sorted.map(r => {
     const p = pct(r.h24, r.total), high = p >= 50;
     return `<tr>
       <td class="rank left">${r.rank}</td><td class="name left">${r.name}</td>
       ${showKt ? `<td class="left"><span class="kt-badge ${r.canton}">${r.canton.toUpperCase()}</span></td>` : ''}
-      <td>${r.total}</td>
+      <td class="total">${r.total}</td>
       <td>${r.h24 > 0 ? `<span class="badge-24h${high ? ' high' : ''}">${r.h24}</span>` : '<span class="none">—</span>'}</td>
       <td><div class="pct-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${p}%"></div></div><span class="pct-text${high ? ' high' : ''}">${p} %</span></div></td>
     </tr>`;
@@ -154,9 +159,10 @@ function fileName(ext) {
   return `defibrillatoren-${part}-${today}.${ext}`;
 }
 
-function loadImage(src) {
+function loadImage(src, crossOrigin) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    if (crossOrigin) img.crossOrigin = 'anonymous';   // nötig, damit jsPDF fremde Bilder lesen darf
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('Logo konnte nicht geladen werden'));
     img.src = src;
@@ -174,11 +180,11 @@ async function exportPDF() {
   const label = cfg.tabLabel(activeTab);
   const files = (activeTab === 'all' ? cfg.cantons : [activeTab]).map(k => `defis_kt_${k}.geojson`).join(' + ');
 
-  doc.setFillColor(20, 68, 48); doc.rect(0, 0, W, 44, 'F');
+  doc.setFillColor(21, 68, 48); doc.rect(0, 0, W, 44, 'F');
   doc.addImage(await loadImage('logo-pdf.jpg'), 'JPEG', 12, 5, 52, 14.7);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(180, 220, 160);
   if (cfg.client) {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(151, 197, 104);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(152, 200, 103);
     doc.text(cfg.client.short, W - 14, 11, { align: 'right' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(180, 220, 160);
   }
@@ -187,13 +193,26 @@ async function exportPDF() {
   doc.text(activeTab === 'all' && !cfg.multi ? `Defibrillatoren ${cfg.preposition} ${cfg.title}` : `Defibrillatoren — ${label}`, 14, 30);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(180, 220, 160);
   doc.text(`Datenquelle: defikarte/defi_data · OpenStreetMap · ${files}`, 14, 37);
-  doc.setFillColor(151, 197, 104); doc.rect(0, 43, W, 1.5, 'F');
+  if (cfg.partner) {
+    doc.setFontSize(7); doc.setTextColor(180, 220, 160);
+    doc.text('Partner', W - 14, 25, { align: 'right' });
+    try {
+      // Klappt nur, wenn der Logo-Server CORS erlaubt; sonst steht der Name als Text da
+      const img = await loadImage(cfg.partner.logo, true);
+      const h = 8, w = img.naturalWidth / img.naturalHeight * h;
+      doc.addImage(img, 'PNG', W - 14 - w, 27, w, h, undefined, 'FAST');
+    } catch {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
+      doc.text(cfg.partner.name, W - 14, 33, { align: 'right' });
+    }
+  }
+  doc.setFillColor(152, 200, 103); doc.rect(0, 43, W, 1.5, 'F');
 
   const boxes = [[fmt(total), 'Defibrillatoren total'], [fmt(total24), 'davon 24/7 erreichbar'], [pct(total24, total) + '%', 'Anteil 24/7'], [exportRows.length, 'Gemeinden mit Defi']];
   boxes.forEach(([v, l], i) => {
     const x = 14 + i * 47.5;
-    doc.setFillColor(238, 247, 227); doc.roundedRect(x, 48, 44, 20, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20, 68, 48);
+    doc.setFillColor(238, 245, 230); doc.roundedRect(x, 48, 44, 20, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(21, 68, 48);
     doc.text(String(v), x + 22, 60, { align: 'center' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(100, 100, 100);
     doc.text(l, x + 22, 65, { align: 'center' });
@@ -205,14 +224,14 @@ async function exportPDF() {
     head: [['#', 'Gemeinde', ...(showKt ? ['Kt.'] : []), 'Total', '24/7', 'Anteil 24h']],
     body: exportRows.map(r => [r.rank, r.name, ...(showKt ? [r.canton.toUpperCase()] : []), r.total, r.h24 > 0 ? r.h24 : '—', pct(r.h24, r.total) + '%']),
     styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 2.5 },
-    headStyles: { fillColor: [20, 68, 48], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [238, 247, 227] },
+    headStyles: { fillColor: [21, 68, 48], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [238, 245, 230] },
     columnStyles: showKt
       ? { 0: { halign: 'right', cellWidth: 10 }, 1: { cellWidth: 98 }, 2: { cellWidth: 12 }, 3: { halign: 'right', cellWidth: 18 }, 4: { halign: 'right', cellWidth: 18 }, 5: { halign: 'right', cellWidth: 24 } }
       : { 0: { halign: 'right', cellWidth: 10 }, 1: { cellWidth: 110 }, 2: { halign: 'right', cellWidth: 18 }, 3: { halign: 'right', cellWidth: 18 }, 4: { halign: 'right', cellWidth: 24 } },
     didDrawPage: d => {
-      doc.setFillColor(151, 197, 104); doc.rect(0, 285, W, 2, 'F');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(20, 68, 48);
+      doc.setFillColor(152, 200, 103); doc.rect(0, 285, W, 2, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(21, 68, 48);
       doc.text('defikarte.ch', 14, 291);
       doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 120, 120);
       doc.text(`Defibrillatoren ${label}${cfg.client ? ' · ' + cfg.client.short : ''} · defikarte/defi_data · OpenStreetMap`, W / 2, 291, { align: 'center' });

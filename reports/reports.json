@@ -1,22 +1,40 @@
 {
   "zh": { "cantons": ["zh"] },
-  "be": { "cantons": ["be"] },
-  "ge": { "cantons": ["ge"] },
-  "ju": { "cantons": ["ju"] },
-  "ne": { "cantons": ["ne"] },
-  "vd": { "cantons": ["vd"] },
+  "be": {
+    "cantons": ["be"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "ge": {
+    "cantons": ["ge"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "ju": {
+    "cantons": ["ju"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "ne": {
+    "cantons": ["ne"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
+  "vd": {
+    "cantons": ["vd"],
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
+  },
   "bs": {
     "cantons": ["bs", "bl"],
     "title": "Basel-Stadt & Basel-Landschaft",
-    "preposition": "in"
+    "preposition": "in",
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
   },
   "luks": {
     "cantons": ["lu", "ur", "nw", "ow"],
     "title": "LUKS-Einzugsgebiet",
-    "client": { "short": "LUKS", "name": "Luzerner Kantonsspital" }
+    "client": { "short": "LUKS", "name": "Luzerner Kantonsspital" },
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
   },
   "so": {
     "cantons": ["so"],
-    "client": { "short": "soH", "name": "Solothurner Spitäler" }
+    "client": { "short": "soH", "name": "Solothurner Spitäler" },
+    "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }
   }
 }
