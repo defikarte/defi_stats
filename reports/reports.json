@@ -1,5 +1,6 @@
 {
   "zh": { "cantons": ["zh"] },
+  "li": { "cantons": ["li"], "title": "Fürstentum Liechtenstein", "preposition": "im" },
   "gr": {
     "cantons": ["gr"],
     "partner": { "name": "sureVIVE", "logo": "https://assets.defikarte.ch/logo/surevive_negativ.png" }

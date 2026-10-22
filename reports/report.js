@@ -1,6 +1,6 @@
 // Generischer Defi-Report: /<id>/ (beim Deploy erzeugt) oder /reports/?r=<id>, Konfiguration in reports.json
 // Sprache: Standard je nach Kanton (siehe i18n.js), umschaltbar mit ?lang=de|fr
-import { DATA_BASE, buildIndex, assign, summarize } from './geo.js';
+import { DATA_BASE, buildIndex, assign, summarize, dataFileName } from './geo.js';
 import { STRINGS, languagesFor } from './i18n.js';
 
 const BADGE_COLORS = [['#EEF5E6', '#30805D'], ['#E3EEF4', '#24576E'], ['#F6EEDF', '#8A5A14'], ['#F3E6E6', '#8A2E2E'], ['#ECE8F4', '#4F3B7A'], ['#E6F2EF', '#1F6656']];
@@ -63,7 +63,7 @@ async function loadData() {
     msg.textContent = t.loadingGithub;
     const [gemeinden, defis] = await Promise.all([
       Promise.all(cfg.cantons.map(k => getJson(`kantone/${k}.json`, `Gemeinden ${k.toUpperCase()}`))),
-      Promise.all(cfg.cantons.map(k => getJson(`${DATA_BASE}defis_kt_${k}.geojson`, k.toUpperCase()))),
+      Promise.all(cfg.cantons.map(k => getJson(DATA_BASE + dataFileName(k), k.toUpperCase()))),
     ]);
 
     msg.textContent = t.processing;
@@ -98,9 +98,9 @@ function renderHeader() {
   $('title').innerHTML = `${t.prefix(cfg)} <span></span>`;
   $('title').querySelector('span').textContent = cfg.titleText;
   $('wappen').classList.toggle('many', cantons.length > 1);
-  $('wappen').innerHTML = cantons.map(k => `<img src="../img/wappen/${k}.png" alt="${t.wappenAlt(k)}" title="${t.canton(k)}">`).join('');
+  $('wappen').innerHTML = cantons.map(k => `<img src="../img/wappen/${k}.png" alt="${t.wappenAlt(k)}" title="${t.canton(k)}" onerror="this.remove()">`).join('');
   $('subtitle').textContent = multi ? t.subtitleMulti(cantons) : t.subtitle;
-  $('source').textContent = `${t.source}${t.colon}defikarte/defi_data · ` + cantons.map(k => `defis_kt_${k}.geojson`).join(' · ');
+  $('source').textContent = `${t.source}${t.colon}defikarte/defi_data · ` + cantons.map(dataFileName).join(' · ');
   $('year').textContent = new Date().getFullYear();
   const style = document.createElement('style');
   style.textContent = cantons.map((k, i) => { const [bg, fg] = BADGE_COLORS[i % BADGE_COLORS.length]; return `.kt-badge.${k}{background:${bg};color:${fg}}`; }).join('');
@@ -199,7 +199,7 @@ async function exportPDF() {
   const total = exportRows.reduce((s, r) => s + r.total, 0);
   const total24 = exportRows.reduce((s, r) => s + r.h24, 0);
   const label = cfg.tabLabel(activeTab);
-  const files = (activeTab === 'all' ? cfg.cantons : [activeTab]).map(k => `defis_kt_${k}.geojson`).join(' + ');
+  const files = (activeTab === 'all' ? cfg.cantons : [activeTab]).map(dataFileName).join(' + ');
 
   doc.setFillColor(21, 68, 48); doc.rect(0, 0, W, 44, 'F');
   doc.addImage(await loadImage('logo-pdf.jpg'), 'JPEG', 12, 5, 52, 14.7);

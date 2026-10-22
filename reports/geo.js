@@ -10,6 +10,13 @@ export const KANTONE = {
 
 export const DATA_BASE = 'https://raw.githubusercontent.com/defikarte/defi_data/main/data/json/';
 
+// Gebiete ausserhalb der Kantone – eigener Report, aber nicht Teil der Schweizer Statistik
+export const REGIONS = {
+  li: { name: 'Liechtenstein', file: 'defis_liechtenstein.geojson' },
+};
+export const regionName = k => KANTONE[k] || REGIONS[k]?.name || k.toUpperCase();
+export const dataFileName = k => REGIONS[k]?.file || `defis_kt_${k}.geojson`;
+
 // Vergleich ohne Akzente, Bindestriche, Kantonszusatz und Gross-/Kleinschreibung
 export function normKey(s) {
   return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()

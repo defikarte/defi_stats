@@ -1,5 +1,5 @@
 // Texte der Report-Seite auf Deutsch und Französisch
-import { KANTONE } from './geo.js';
+import { KANTONE, REGIONS, regionName } from './geo.js';
 
 // Französischsprachige Kantone: Report standardmässig auf Französisch
 export const FR_CANTONS = ['ge', 'ne', 'vd', 'ju'];
@@ -27,15 +27,15 @@ export const STRINGS = {
   de: {
     locale: 'de-CH',
     colon: ': ',
-    canton: k => KANTONE[k],
+    canton: k => regionName(k),
     // Titel: "Defibrillatoren im <span>Kanton Zürich</span>"
-    title: c => c.title || (c.cantons.length === 1 ? `Kanton ${KANTONE[c.cantons[0]]}` : c.cantons.map(k => KANTONE[k]).join(' & ')),
+    title: c => c.title || (c.cantons.length === 1 ? (KANTONE[c.cantons[0]] ? `Kanton ${KANTONE[c.cantons[0]]}` : regionName(c.cantons[0])) : c.cantons.map(regionName).join(' & ')),
     prefix: c => `Defibrillatoren ${c.preposition || (c.cantons.length === 1 || c.title ? 'im' : 'in')}`,
     defis: 'Defibrillatoren',
     report: 'Report',
     reportFor: n => `Report für ${n}`,
     subtitle: 'Auswertung pro Gemeinde · Daten aus OpenStreetMap',
-    subtitleMulti: ks => `Kantone ${ks.map(k => KANTONE[k]).join(' · ')} · Auswertung pro Gemeinde · Daten aus OpenStreetMap`,
+    subtitleMulti: ks => `Kantone ${ks.map(regionName).join(' · ')} · Auswertung pro Gemeinde · Daten aus OpenStreetMap`,
     source: 'Datenquelle',
     statTotal: 'Defibrillatoren total',
     stat24: 'davon 24/7 erreichbar',
@@ -57,7 +57,7 @@ export const STRINGS = {
     partnerFooter: 'In Zusammenarbeit mit',
     githubLink: 'Daten auf GitHub',
     footerNote: 'Daten © OpenStreetMap-Mitwirkende (ODbL) · Gemeindegrenzen © swisstopo',
-    wappenAlt: k => `Wappen Kanton ${KANTONE[k]}`,
+    wappenAlt: k => KANTONE[k] ? `Wappen Kanton ${KANTONE[k]}` : `Wappen ${regionName(k)}`,
     pdfStand: 'Stand',
     pdfPage: 'Seite',
     pdfFailed: 'PDF-Export fehlgeschlagen: ',
@@ -67,7 +67,7 @@ export const STRINGS = {
   fr: {
     locale: 'fr-CH',
     colon: ' : ',   // französische Typografie: Leerschlag vor dem Doppelpunkt
-    canton: k => KANTONE_FR[k],
+    canton: k => KANTONE_FR[k] || REGIONS[k]?.name || k.toUpperCase(),
     // Titre: "Défibrillateurs dans le <span>canton de Genève</span>"
     title: c => c.title_fr || (c.title ? c.title : c.cantons.length === 1 ? `canton ${deFr(c.cantons[0])}` : `cantons ${listFr(c.cantons)}`),
     prefix: c => c.title_fr ? `Défibrillateurs ${c.preposition_fr || 'dans le'}` : c.title ? 'Défibrillateurs :' : `Défibrillateurs dans ${c.cantons.length === 1 ? 'le' : 'les'}`,

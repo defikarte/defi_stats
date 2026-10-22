@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Erzeugt reports/kantone/<kt>.json (Gemeindegrenzen pro Kanton) und einwohner.json aus swissBOUNDARIES3D (swisstopo).
+"""Erzeugt reports/kantone/<kt>.json (Gemeindegrenzen pro Kanton, dazu li.json für Liechtenstein) und einwohner.json aus swissBOUNDARIES3D (swisstopo).
 
     python3 scripts/build_gemeinden.py                  # neuester Stand
     python3 scripts/build_gemeinden.py --tolerance 20   # Vereinfachung in Metern (Standard 10)
@@ -109,15 +109,16 @@ def main():
                 name = next(n for n in z.namelist() if n.endswith('.gpkg'))
                 path = z.extract(name, tmp)
         db = sqlite3.connect(path)
-        rows = db.execute("""select bfs_nummer, name, kantonsnummer, geom from tlm_hoheitsgebiet
-                             where icc = 'CH' and objektart in ('Gemeindegebiet', 'Kommunanz')""").fetchall()
+        rows = db.execute("""select bfs_nummer, name, kantonsnummer, icc, geom from tlm_hoheitsgebiet
+                             where icc in ('CH', 'LI') and objektart in ('Gemeindegebiet', 'Kommunanz')""").fetchall()
         einwohner = db.execute("""select kantonsnummer, sum(einwohnerzahl) from tlm_kantonsgebiet
                                   where icc = 'CH' group by kantonsnummer""").fetchall()
 
     per_canton = {}
-    for bfs, name, ktnr, blob in rows:
+    for bfs, name, ktnr, icc, blob in rows:
         rings = [[lv95_to_wgs84(e, n) for e, n in simplify(r, args.tolerance)] for r in gpkg_geometry(blob)]
-        per_canton.setdefault(KANTONE[ktnr - 1], []).append({'bfs': bfs, 'name': name, 'rings': rings})
+        region = 'li' if icc == 'LI' else KANTONE[ktnr - 1]   # Liechtenstein: eigene Datei li.json
+        per_canton.setdefault(region, []).append({'bfs': bfs, 'name': name, 'rings': rings})
 
     args.out.mkdir(parents=True, exist_ok=True)
     for kt, lst in sorted(per_canton.items()):

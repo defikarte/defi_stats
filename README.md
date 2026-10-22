@@ -209,6 +209,8 @@ Einen Eintrag in `reports/reports.json` ergänzen und auf `main` pushen – fert
 
 Optional können einzelne Defis manuell einer Gemeinde zugewiesen werden: `"overrides": { "node/123456": "Bern" }`.
 
+**Liechtenstein** (`stats.defikarte.ch/li/`) läuft als «Region» über dieselbe Vorlage: eigene Datendatei (`defis_liechtenstein.geojson`, siehe `REGIONS` in `reports/geo.js`), Gemeindegrenzen in `reports/kantone/li.json`. Es fliesst nicht in die Schweizer Statistik ein.
+
 **Sprache** – Reports gibt es auf Deutsch und Französisch (Texte in `reports/i18n.js`):
 
 - GE, NE, VD, JU: standardmässig Französisch, mit Umschalter FR | DE

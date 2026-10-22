@@ -22,7 +22,10 @@
     .legend { display: flex; align-items: center; gap: .75rem; font-size: 13px; font-weight: 300; color: var(--text-sub); margin-top: .75rem; }
     .legend-bar { flex: 1; max-width: 220px; height: 8px; border-radius: 4px; background: linear-gradient(to right, #DCEBC9, var(--green-dark)); }
     .rank td, .rank th { padding-left: .9rem; padding-right: .9rem; }
-    .rank td.name { font-weight: 500; white-space: nowrap; }
+    .rank td.name { font-weight: 500; }
+    .rank td.name .nm { white-space: nowrap; }
+    .rank td.name a { color: inherit; text-decoration: none; }
+    .rank td.name a:hover { color: var(--green-mid); text-decoration: underline; }
     .rank td.name small { display: block; font-size: 12px; font-weight: 300; color: var(--text-sub); }
     .rank tr.ch { background: var(--green-tint); }
     .rank tr.ch:hover { background: var(--green-tint); }
@@ -113,6 +116,8 @@ const COUNTRIES = [
   { iso: 'IT', name: 'Italien',       flag: '🇮🇹', pop: 59240 },
   { iso: 'LI', name: 'Liechtenstein', flag: '🇱🇮', pop: 39    },
 ];   // pop in Tausend
+// Länder mit eigenem Report pro Gemeinde
+const REPORTS = { LI: '../li/' };
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('de-CH');
 const dec = n => n.toFixed(1).replace('.', ',');
@@ -164,7 +169,7 @@ function renderRank() {
   $('rank-head').innerHTML = cols.map(([k, l, cls = '']) => `<th class="${cls}${sortKey === k ? ' sorted' : ''}" data-sort="${k}">${l}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('');
   $('rank-body').innerHTML = rows.map(c => `<tr class="${c.iso === 'CH' ? 'ch' : ''}">
     <td class="rank left">${byPer.indexOf(c) + 1}</td>
-    <td class="name left"><span class="flag">${c.flag}</span>${c.name}<small>${fmt(c.pop * 1000)} Einwohner</small></td>
+    <td class="name left"><span class="nm"><span class="flag">${c.flag}</span>${REPORTS[c.iso] ? `<a href="${REPORTS[c.iso]}">${c.name} →</a>` : c.name}</span><small>${fmt(c.pop * 1000)} Einwohner${REPORTS[c.iso] ? ' · Report pro Gemeinde' : ''}</small></td>
     <td class="total">${fmt(data[c.iso])}</td>
     <td class="per">${dec(per100k(c))}</td></tr>`).join('');
 }
